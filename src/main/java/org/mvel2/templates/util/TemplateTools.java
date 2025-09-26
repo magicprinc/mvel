@@ -22,23 +22,28 @@ import org.mvel2.templates.TemplateError;
 import org.mvel2.templates.res.Node;
 import org.mvel2.templates.res.TerminalNode;
 
-import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HexFormat;
 
-import static java.nio.ByteBuffer.allocateDirect;
+import static java.nio.charset.StandardCharsets.*;
 import static org.mvel2.util.ParseTools.balancedCapture;
 
 public class TemplateTools {
+
   public static Node getLastNode(Node node) {
     Node n = node;
-    while (true) {
-      if (n.getNext() instanceof TerminalNode) return n;
+    while (true){
+      if (n.getNext() instanceof TerminalNode)
+					return n;
       n = n.getNext();
     }
   }
 
-  public static int captureToEOS(char[] expression, int cursor) {
+  public static int captureToEOS (char[] expression, int cursor) {
     int length = expression.length;
     while (cursor != length) {
       switch (expression[cursor]) {
@@ -59,65 +64,47 @@ public class TemplateTools {
     return cursor;
   }
 
-  public static String readInFile(String file) {
+  public static String readInFile (String file) throws TemplateError {
     return readInFile(new File(file));
   }
 
-  public static String readInFile(File file) {
+  public static String readInFile (File file) throws TemplateError {
     try {
-      FileChannel fc = new FileInputStream(file).getChannel();
-      ByteBuffer buf = allocateDirect(10);
-      StringBuilder appender = new StringBuilder();
-      int read;
-
-      while (true) {
-        buf.rewind();
-        if ((read = fc.read(buf)) != -1) {
-          buf.rewind();
-          for (; read != 0; read--) {
-            appender.append((char) buf.get());
-          }
-        }
-        else {
-          break;
-        }
-      }
-
-      fc.close();
-
-      return appender.toString();
-    }
-    catch (FileNotFoundException e) {
-      throw new TemplateError("cannot include template '" + file.getName() + "': file not found.");
-    }
-    catch (IOException e) {
+      try (var is = new FileInputStream(file)){
+				return readStream(is);
+			}
+    } catch (FileNotFoundException e){
+      throw new TemplateError("cannot include template '" + file.getName() + "': file not found.", e);
+    } catch (IOException e){
       throw new TemplateError("unknown I/O exception while including '" + file.getName() + "' (stacktrace nested)", e);
     }
   }
 
-  public static String readStream(InputStream instream) {
+  public static String readStream (InputStream is) throws TemplateError {
     try {
-      byte[] buf = new byte[10];
-      StringBuilder appender = new StringBuilder();
-      int read;
-      while ((read = instream.read(buf)) != -1) {
-        for (int i = 0; i < read; i++) {
-          appender.append((char) buf[i]);
-        }
-      }
-
-      return appender.toString();
-    }
-    catch (NullPointerException e) {
-      if (instream == null) {
-        throw new TemplateError("null input stream", e);
-      }
-      else {
-        throw e;
-      }
-    }
-    catch (IOException e) {
+			byte[] buf = is.readAllBytes();
+      return asStr(buf);
+    } catch (NullPointerException e) {
+      if (is == null)
+        	throw new TemplateError("null input stream", e);
+      else
+        	throw e;// inside InputStream 🤷‍♀️
+    } catch (IOException e){
       throw new TemplateError("unknown I/O exception while including (stacktrace nested)", e);
     }
   }
+
+	@SuppressWarnings({"deprecation", "ImplicitDefaultCharsetUsage"})
+	public static String asStr (byte[] b) {
+		if (b == null || b.length <= 0)
+				return "";
+		try {
+			return new String(b, UTF_8);
+		} catch (Throwable e){
+			System.Logger log = System.getLogger(TemplateTools.class.getName());
+
+			log.log(System.Logger.Level.ERROR, "asStr: failed to convert byte[] to UTF-8 str: (%s) %s", b.length, HexFormat.of().formatHex(b));
+			return new String(b, 0/*hiByte*/);// fallback to Latin1
+		}
+	}
 }
