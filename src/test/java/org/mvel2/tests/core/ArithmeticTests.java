@@ -7,6 +7,7 @@ import org.mvel2.ParserContext;
 import org.mvel2.compiler.CompiledExpression;
 import org.mvel2.compiler.ExecutableStatement;
 import org.mvel2.compiler.ExpressionCompiler;
+import org.mvel2.integration.impl.CachedMapVariableResolverFactory;
 import org.mvel2.optimizers.OptimizerFactory;
 import org.mvel2.util.Make;
 
@@ -1124,5 +1125,14 @@ public class ArithmeticTests extends AbstractTest {
 
 		result = test("Math.max(5.1, 20)");
 		assertEquals(Integer.class, result.getClass());
+
+		var context = new ParserContext();
+		context.setStrictTypeEnforcement(true);
+		context.setStrongTyping(true);
+
+		Serializable compiled = MVEL.compileExpression("Math.min(5.1, 20)");
+		result = MVEL.executeExpression(compiled, context, new CachedMapVariableResolverFactory(new HashMap<>()));
+		assertEquals(Integer.class, result.getClass());
+		assertEquals(5, result);
 	}
 }

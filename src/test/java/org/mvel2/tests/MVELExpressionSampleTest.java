@@ -103,8 +103,19 @@ public class MVELExpressionSampleTest {
 		var context = new ParserContext();
 		context.setStrictTypeEnforcement(true);
 		context.setStrongTyping(true);
+
 		Serializable compiled = MVEL.compileExpression("String a = 'b' return a.length();");
-		Object result = MVEL.executeExpression(compiled, context, new CachedMapVariableResolverFactory(new HashMap()));
+		Object result = MVEL.executeExpression(compiled, context, new CachedMapVariableResolverFactory(new HashMap<>()));
 		assertEquals("b", result);
+
+		compiled = MVEL.compileExpression("String a = 'b'; return a.length();");
+		result = MVEL.executeExpression(compiled, context, new CachedMapVariableResolverFactory(new HashMap<>()));
+		assertEquals(1, result);
+
+		result = MVEL.eval("String a = 'b' return a.length();", new HashMap<>());
+		assertEquals("b", result);
+
+		result = MVEL.eval("String a = 'b'; return a.length();", new HashMap<>());
+		assertEquals(1, result);
 	}
 }

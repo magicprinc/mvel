@@ -2075,9 +2075,10 @@ public class AbstractParser implements Parser, Serializable {
    * @param expression the expression
    */
   protected void setExpression (char[] expression) {
-    end = length = (this.expr = expression).length;
+    length = (this.expr = expression).length;
     while (start < length && isWhitespace(expr[start])) start++;
     while (length != 0 && isWhitespace(this.expr[length - 1])) length--;
+		end = length;
   }
 
   /**
@@ -2197,11 +2198,6 @@ public class AbstractParser implements Parser, Serializable {
     while (c != end && isWhitespace(expr[c])) c++;
     return !(c != end && expr[c] == ';');
   }
-
-  protected static final int SET = 0;
-  protected static final int REMOVE = 1;
-  protected static final int GET = 2;
-  protected static final int GET_OR_CREATE = 3;
 
   protected void addFatalError(String message) {
     pCtx.addError(new ErrorDetail(expr, st, true, message));
