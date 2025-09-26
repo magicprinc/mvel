@@ -17,84 +17,42 @@
  */
 package org.mvel2.compiler;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.WeakHashMap;
-
 import org.mvel2.CompileException;
 import org.mvel2.ErrorDetail;
 import org.mvel2.Operator;
 import org.mvel2.ParserContext;
-import org.mvel2.ast.ASTNode;
-import org.mvel2.ast.AssertNode;
-import org.mvel2.ast.AssignmentNode;
-import org.mvel2.ast.BooleanNode;
-import org.mvel2.ast.DeclProtoVarNode;
-import org.mvel2.ast.DeclTypedVarNode;
-import org.mvel2.ast.DeepAssignmentNode;
-import org.mvel2.ast.DeepOperativeAssignmentNode;
-import org.mvel2.ast.DoNode;
-import org.mvel2.ast.DoUntilNode;
-import org.mvel2.ast.EndOfStatement;
-import org.mvel2.ast.Fold;
-import org.mvel2.ast.ForEachNode;
-import org.mvel2.ast.ForNode;
-import org.mvel2.ast.Function;
-import org.mvel2.ast.IfNode;
-import org.mvel2.ast.ImportNode;
-import org.mvel2.ast.IndexedAssignmentNode;
-import org.mvel2.ast.IndexedDeclTypedVarNode;
-import org.mvel2.ast.IndexedOperativeAssign;
-import org.mvel2.ast.IndexedPostFixDecNode;
-import org.mvel2.ast.IndexedPostFixIncNode;
-import org.mvel2.ast.IndexedPreFixDecNode;
-import org.mvel2.ast.IndexedPreFixIncNode;
-import org.mvel2.ast.InlineCollectionNode;
-import org.mvel2.ast.InterceptorWrapper;
-import org.mvel2.ast.Invert;
-import org.mvel2.ast.IsDef;
-import org.mvel2.ast.LineLabel;
-import org.mvel2.ast.LiteralDeepPropertyNode;
-import org.mvel2.ast.LiteralNode;
-import org.mvel2.ast.Negation;
-import org.mvel2.ast.NewObjectNode;
-import org.mvel2.ast.NewObjectPrototype;
-import org.mvel2.ast.NewPrototypeNode;
-import org.mvel2.ast.OperativeAssign;
-import org.mvel2.ast.OperatorNode;
-import org.mvel2.ast.PostFixDecNode;
-import org.mvel2.ast.PostFixIncNode;
-import org.mvel2.ast.PreFixDecNode;
-import org.mvel2.ast.PreFixIncNode;
-import org.mvel2.ast.Proto;
-import org.mvel2.ast.ProtoVarNode;
-import org.mvel2.ast.RedundantCodeException;
-import org.mvel2.ast.RegExMatch;
-import org.mvel2.ast.ReturnNode;
-import org.mvel2.ast.Sign;
-import org.mvel2.ast.Stacklang;
-import org.mvel2.ast.StaticImportNode;
-import org.mvel2.ast.Substatement;
-import org.mvel2.ast.ThisWithNode;
-import org.mvel2.ast.TypeCast;
-import org.mvel2.ast.TypeDescriptor;
-import org.mvel2.ast.TypedVarNode;
-import org.mvel2.ast.Union;
-import org.mvel2.ast.UntilNode;
-import org.mvel2.ast.WhileNode;
-import org.mvel2.ast.WithNode;
+import org.mvel2.ast.*;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.util.ErrorUtil;
 import org.mvel2.util.ExecutionStack;
 import org.mvel2.util.FunctionParser;
 import org.mvel2.util.ProtoParser;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.WeakHashMap;
+
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static org.mvel2.Operator.*;
 import static org.mvel2.ast.TypeDescriptor.getClassReference;
+import static org.mvel2.util.ArrayTools.EMPTY_CHAR;
 import static org.mvel2.util.ArrayTools.findFirst;
-import static org.mvel2.util.ParseTools.*;
+import static org.mvel2.util.ParseTools.balancedCaptureWithLineAccounting;
+import static org.mvel2.util.ParseTools.captureStringLiteral;
+import static org.mvel2.util.ParseTools.containsCheck;
+import static org.mvel2.util.ParseTools.createStringTrimmed;
+import static org.mvel2.util.ParseTools.handleStringEscapes;
+import static org.mvel2.util.ParseTools.isArrayType;
+import static org.mvel2.util.ParseTools.isDigit;
+import static org.mvel2.util.ParseTools.isIdentifierPart;
+import static org.mvel2.util.ParseTools.isNotValidNameorLabel;
+import static org.mvel2.util.ParseTools.isPropertyOnly;
+import static org.mvel2.util.ParseTools.isReservedWord;
+import static org.mvel2.util.ParseTools.isWhitespace;
+import static org.mvel2.util.ParseTools.opLookup;
+import static org.mvel2.util.ParseTools.similarity;
+import static org.mvel2.util.ParseTools.subset;
 import static org.mvel2.util.PropertyTools.isEmpty;
 import static org.mvel2.util.Soundex.soundex;
 
@@ -172,9 +130,7 @@ public class AbstractParser implements Parser, Serializable {
       CLASS_LITERALS = new HashMap<String, Object>();
       OPERATORS = new HashMap<String, Integer>();
 
-      /**
-       * Add System and all the class wrappers from the JCL.
-       */
+      // Add System and all the class wrappers from the JCL.
       CLASS_LITERALS.put("System", System.class);
       CLASS_LITERALS.put("String", String.class);
       CLASS_LITERALS.put("CharSequence", CharSequence.class);
@@ -244,10 +200,7 @@ public class AbstractParser implements Parser, Serializable {
    */
   protected ASTNode nextToken() {
     try {
-      /**
-       * If the cursor is at the end of the expression, we have nothing more to do:
-       * return null.
-       */
+      // If the cursor is at the end of the expression, we have nothing more to do: return null
       if (!splitAccumulator.isEmpty()) {
         lastNode = (ASTNode) splitAccumulator.pop();
         if (cursor >= end && lastNode instanceof EndOfStatement) {
@@ -265,7 +218,7 @@ public class AbstractParser implements Parser, Serializable {
       int tmpStart;
 
       String name;
-      /**
+      /*
        * Because of parser recursion for sub-expression parsing, we sometimes need to remain
        * certain field states.  We do not reset for assignments, boolean mode, list creation or
        * a capture only mode.
@@ -307,12 +260,12 @@ public class AbstractParser implements Parser, Serializable {
         }
       }
 
-      /**
+      /*
        * Skip any whitespace currently under the starting point.
        */
       skipWhitespace();
 
-      /**
+      /*
        * From here to the end of the method is the core MVEL parsing code.  Fiddling around here is asking for
        * trouble unless you really know what you're doing.
        */
@@ -328,7 +281,7 @@ public class AbstractParser implements Parser, Serializable {
           while (cursor != end && isIdentifierPart(expr[cursor])) cursor++;
         }
 
-        /**
+        /*
          * If the current character under the cursor is a valid
          * part of an identifier, we keep capturing.
          */
@@ -343,7 +296,7 @@ public class AbstractParser implements Parser, Serializable {
                       + expr[cursor], expr, st);
                 }
 
-                /**
+                /*
                  * Capture the beginning part of the token.
                  */
                 do {
@@ -352,7 +305,7 @@ public class AbstractParser implements Parser, Serializable {
                 }
                 while (cursor < end && expr[cursor] == '[');
 
-                /**
+                /*
                  * If it's not a dimentioned array, continue capturing if necessary.
                  */
                 if (cursor < end && !lastNonWhite(']')) captureToEOT();
@@ -526,7 +479,7 @@ public class AbstractParser implements Parser, Serializable {
 
           skipWhitespace();
 
-          /**
+          /*
            * If we *were* capturing a token, and we just hit a non-identifier
            * character, we stop and figure out what to do.
            */
@@ -534,7 +487,7 @@ public class AbstractParser implements Parser, Serializable {
             cursor = balancedCaptureWithLineAccounting(expr, cursor, end, '(', pCtx) + 1;
           }
 
-          /**
+          /*
            * If we encounter any of the following cases, we are still dealing with
            * a contiguous token.
            */
@@ -649,7 +602,7 @@ public class AbstractParser implements Parser, Serializable {
                 }
                 break CaptureLoop;
 
-              /**
+              /*
                * Exit immediately for any of these cases.
                */
               case '!':
@@ -881,7 +834,7 @@ public class AbstractParser implements Parser, Serializable {
             }
           }
 
-          /**
+          /*
            * Produce the token.
            */
           trimWhitespace();
@@ -1060,7 +1013,7 @@ public class AbstractParser implements Parser, Serializable {
                     break;
 
                   default:
-                    /**
+                    /*
                      * Check to see if we should disqualify this current token as a potential
                      * type-cast candidate.
                      */
@@ -1278,10 +1231,7 @@ public class AbstractParser implements Parser, Serializable {
     catch (NumberFormatException e) {
       throw new CompileException("badly formatted number: " + e.getMessage(), expr, st, e);
     }
-    catch (StringIndexOutOfBoundsException e) {
-      throw new CompileException("unexpected end of statement", expr, cursor, e);
-    }
-    catch (ArrayIndexOutOfBoundsException e) {
+    catch (StringIndexOutOfBoundsException | ArrayIndexOutOfBoundsException e) {
       throw new CompileException("unexpected end of statement", expr, cursor, e);
     }
     catch (CompileException e) {
@@ -1348,13 +1298,11 @@ public class AbstractParser implements Parser, Serializable {
    * @param end   the end offset
    * @return an array
    */
-  private char[] subArray(final int start, final int end) {
-    if (start >= end) return new char[0];
+  private char[] subArray (int start, int end) {
+    if (start >= end) return EMPTY_CHAR;
 
-    char[] newA = new char[end - start];
-    for (int i = 0; i != newA.length; i++) {
-      newA[i] = expr[i + start];
-    }
+    var newA = new char[end - start];
+		System.arraycopy(expr, start, newA, 0, newA.length);
 
     return newA;
   }
@@ -1620,7 +1568,7 @@ public class AbstractParser implements Parser, Serializable {
 
     String name;
 
-    /**
+    /*
      * Functions are a special case we handle differently from the rest of block parsing
      */
     switch (type) {
@@ -1633,7 +1581,7 @@ public class AbstractParser implements Parser, Serializable {
           throw new CompileException("unexpected end of statement", expr, st);
         }
 
-        /**
+        /*
          * Check to see if the name is legal.
          */
         if (isReservedWord(name = createStringTrimmed(expr, st, cursor - st))
@@ -1695,7 +1643,7 @@ public class AbstractParser implements Parser, Serializable {
             throw new CompileException("expected '(' but encountered: " + expr[cursor], expr, cursor);
           }
 
-          /**
+          /*
            * This block is an: IF, FOREACH or WHILE node.
            */
 
@@ -2106,25 +2054,15 @@ public class AbstractParser implements Parser, Serializable {
    *
    * @param expression the expression
    */
-  protected void setExpression(String expression) {
-    if (expression != null && expression.length() != 0) {
+  protected void setExpression (String expression) {
+    if (expression != null && expression.length() > 0){
       synchronized (EX_PRECACHE) {
-        if ((this.expr = EX_PRECACHE.get(expression)) == null) {
-          end = length = (this.expr = expression.toCharArray()).length;
-
+        if ((this.expr = EX_PRECACHE.get(expression)) == null){
           // trim any whitespace.
-          while (start < length && isWhitespace(expr[start])) start++;
-
-          while (length != 0 && isWhitespace(this.expr[length - 1])) length--;
-
-          char[] e = new char[length];
-
-          for (int i = 0; i != e.length; i++)
-            e[i] = expr[i];
-
-          EX_PRECACHE.put(expression, e);
-        }
-        else {
+					this.expr = expression.trim().strip().toCharArray();
+					this.end = this.length = this.expr.length;
+          EX_PRECACHE.put(expression, this.expr);
+        } else {
           end = length = this.expr.length;
         }
       }
@@ -2136,7 +2074,7 @@ public class AbstractParser implements Parser, Serializable {
    *
    * @param expression the expression
    */
-  protected void setExpression(char[] expression) {
+  protected void setExpression (char[] expression) {
     end = length = (this.expr = expression).length;
     while (start < length && isWhitespace(expr[start])) start++;
     while (length != 0 && isWhitespace(this.expr[length - 1])) length--;
@@ -2388,20 +2326,20 @@ public class AbstractParser implements Parser, Serializable {
     ASTNode tk;
     int operator2;
 
-    /**
+    /*
      * If the next token is an operator, we check to see if it has a higher
      * precdence.
      */
     if ((tk = nextToken()) != null) {
       if (isArithmeticOperator(operator2 = tk.getOperator()) && PTABLE[operator2] > PTABLE[operator]) {
         stk.xswap();
-        /**
+        /*
          * The current arith. operator is of higher precedence the last.
          */
 
         tk = nextToken();
 
-        /**
+        /*
          * Check to see if we're compiling or executing interpretively.  If we're compiling, we really
          * need to stop if this is not a literal.
          */
@@ -2423,7 +2361,7 @@ public class AbstractParser implements Parser, Serializable {
               stk.copyx2(dStack);
             }
 
-            /**
+            /*
              * This operator is of higher precedence, or the same level precedence.  push to the RHS.
              */
             ASTNode nextToken = nextToken();
@@ -2444,7 +2382,7 @@ public class AbstractParser implements Parser, Serializable {
                 }
               }
 
-              /**
+              /*
                * This operator is of the same level precedence.  push to the RHS.
                */
 
@@ -2453,7 +2391,7 @@ public class AbstractParser implements Parser, Serializable {
               continue;
             }
             else {
-              /**
+              /*
                * The operator doesn't have higher precedence. Therfore reduce the LHS.
                */
               while (dStack.size() > 1) {
@@ -2470,7 +2408,7 @@ public class AbstractParser implements Parser, Serializable {
             }
           }
           else {
-            /**
+            /*
              * There are no more tokens.
              */
 
@@ -2786,15 +2724,7 @@ public class AbstractParser implements Parser, Serializable {
     }
   }
 
-  public int getCursor() {
-    return cursor;
-  }
+  @Override public int getCursor (){ return cursor; }
 
-  public char[] getExpression() {
-    return expr;
-  }
-
-  private static int asInt(final Object o) {
-    return (Integer) o;
-  }
+  @Override public char[] getExpression (){ return expr; }
 }

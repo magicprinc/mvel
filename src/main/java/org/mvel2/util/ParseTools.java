@@ -18,32 +18,6 @@
 
 package org.mvel2.util;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Executable;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.MathContext;
-import java.nio.ByteBuffer;
-import java.nio.channels.ReadableByteChannel;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
-
 import org.mvel2.CompileException;
 import org.mvel2.DataTypes;
 import org.mvel2.MVEL;
@@ -62,14 +36,40 @@ import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.integration.impl.ClassImportResolverFactory;
 import org.mvel2.math.MathProcessor;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Serializable;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.MathContext;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
+
 import static java.lang.Class.forName;
 import static java.lang.Double.parseDouble;
 import static java.lang.String.valueOf;
 import static java.lang.System.arraycopy;
 import static java.lang.Thread.currentThread;
-import static java.nio.ByteBuffer.allocateDirect;
 import static org.mvel2.DataConversion.canConvert;
-import static org.mvel2.DataTypes.*;
+import static org.mvel2.DataTypes.DOUBLE;
+import static org.mvel2.DataTypes.INTEGER;
+import static org.mvel2.DataTypes.LONG;
 import static org.mvel2.MVEL.getDebuggingOutputFileName;
 import static org.mvel2.compiler.AbstractParser.LITERALS;
 import static org.mvel2.integration.ResolverTools.appendFactory;
@@ -991,7 +991,7 @@ public class ParseTools {
 
   public static char[] subsetTrimmed(char[] array, int start, int length) {
     if (length <= 0) {
-      return new char[0];
+      return ArrayTools.EMPTY_CHAR;
     }
 
     int end = start + length;
@@ -1006,7 +1006,7 @@ public class ParseTools {
     length = end - start;
 
     if (length == 0) {
-      return new char[0];
+      return ArrayTools.EMPTY_CHAR;
     }
 
     return subset(array, start, length);
@@ -1302,20 +1302,18 @@ public class ParseTools {
    * @param pos  -
    * @return -
    */
-  public static int trimRight(char[] expr, int pos) {
+  public static int trimRight (char[] expr, int pos) {
     while (pos != expr.length && isWhitespace(expr[pos])) pos++;
     return pos;
   }
 
-  public static char[] subArray(char[] expr, final int start, final int end) {
-    if (start >= end) return new char[0];
+  public static char[] subArray (char[] expr, int start, int end) {
+    if (start >= end) return ArrayTools.EMPTY_CHAR;
 
-    char[] newA = new char[end - start];
-    for (int i = 0; i != newA.length; i++) {
-      newA[i] = expr[i + start];
-    }
+    var newA = new char[end - start];
+		System.arraycopy(expr, start, newA, 0, newA.length);
 
-    return newA;
+		return newA;
   }
 
 
@@ -1535,13 +1533,15 @@ public class ParseTools {
   }
 
 
-  public static void parseWithExpressions(String nestParm,
-                                          char[] block,
-                                          int start,
-                                          int offset,
-                                          Object ctx,
-                                          VariableResolverFactory factory) {
-    /**
+  public static void parseWithExpressions (
+		String nestParm,
+		char[] block,
+		int start,
+		int offset,
+		Object ctx,
+		VariableResolverFactory factory
+	){
+    /*
      *
      * MAINTENANCE NOTE: A COMPILING VERSION OF THIS CODE IS DUPLICATED IN: WithNode
      *
@@ -2166,78 +2166,42 @@ public class ParseTools {
     return compiled;
   }
 
-  public static boolean isWhitespace(char c) {
-    return c < '\u0020' + 1;
+  public static boolean isWhitespace (char c) {
+    return Character.isSpaceChar(c) || Character.isWhitespace(c);
   }
 
-  public static String repeatChar(char c, int times) {
-    char[] n = new char[times];
-    for (int i = 0; i < times; i++) {
-      n[i] = c;
-    }
+  public static String repeatChar (char c, int times) {
+    var n = new char[times];
+		Arrays.fill(n, c);
     return new String(n);
   }
 
-  public static char[] loadFromFile(File file) throws IOException {
-    return loadFromFile(file, null);
+  public static char[] loadFromFile (File file) throws IOException {
+		if (!file.exists())
+			throw new FileNotFoundException("cannot find file: " + file.getName());
+
+		try (FileInputStream inStream = new FileInputStream(file)){
+			byte[] buf = inStream.readAllBytes();
+			String s = new String(buf, StandardCharsets.UTF_8);
+			return s.toCharArray();
+		} catch (FileNotFoundException e){
+			// this can't be thrown, we check for this explicitly.
+		}
+		return null;
   }
 
-  public static char[] loadFromFile(File file, String encoding) throws IOException {
+  public static char[] loadFromFile (File file, String encoding) throws IOException {
     if (!file.exists())
-      throw new RuntimeException("cannot find file: " + file.getName());
+      	throw new FileNotFoundException("cannot find file: " + file.getName());
 
-    FileInputStream inStream = null;
-    ReadableByteChannel fc = null;
-    try {
-      fc = (inStream = new FileInputStream(file)).getChannel();
-      ByteBuffer buf = allocateDirect(10);
-
-      StringAppender sb = new StringAppender((int) file.length(), encoding);
-
-      int read = 0;
-      while (read >= 0) {
-        buf.rewind();
-        read = fc.read(buf);
-        buf.rewind();
-
-        for (; read > 0; read--) {
-          sb.append(buf.get());
-        }
-      }
-
-      //noinspection unchecked
-      return sb.toChars();
-    }
-    catch (FileNotFoundException e) {
-      // this can't be thrown, we check for this explicitly.
-    }
-    finally {
-      if (inStream != null) inStream.close();
-      if (fc != null) fc.close();
-    }
-
+		try (FileInputStream inStream = new FileInputStream(file)){
+			byte[] buf = inStream.readAllBytes();
+			String s = new String(buf, encoding != null ? encoding : "UTF-8");
+			return s.toCharArray();
+		} catch (FileNotFoundException e){
+			// this can't be thrown, we check for this explicitly.
+		}
     return null;
-  }
-
-  public static char[] readIn(InputStream inStream, String encoding) throws IOException {
-    try {
-      byte[] buf = new byte[10];
-
-      StringAppender sb = new StringAppender(10, encoding);
-
-      int bytesRead;
-      while ((bytesRead = inStream.read(buf)) > 0) {
-        for (int i = 0; i < bytesRead; i++) {
-          sb.append(buf[i]);
-        }
-      }
-
-      //noinspection unchecked
-      return sb.toChars();
-    }
-    finally {
-      if (inStream != null) inStream.close();
-    }
   }
 
   public static Class forNameWithInner(String className, ClassLoader classLoader) throws ClassNotFoundException {
