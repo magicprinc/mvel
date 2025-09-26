@@ -66,7 +66,8 @@ public class DefaultLocalVariableResolverFactory extends MapVariableResolverFact
     return indexedVariableResolvers[index];
   }
 
-  public VariableResolver getVariableResolver(String name) {
+  @Override
+	public VariableResolver getVariableResolver(String name) {
     if (indexedVariableNames == null) return super.getVariableResolver(name);
 
     int idx;
@@ -82,7 +83,8 @@ public class DefaultLocalVariableResolverFactory extends MapVariableResolverFact
     return super.getVariableResolver(name);
   }
 
-  public VariableResolver createVariable(String name, Object value, Class<?> type) {
+  @Override
+	public VariableResolver createVariable(String name, Object value, Class<?> type) {
     if (indexedVariableNames == null) return super.createVariable(name, value, type);
 
     VariableResolver vr;

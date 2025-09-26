@@ -27,22 +27,21 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-@SuppressWarnings({"unchecked"})
 public class MapVariableResolverFactory extends BaseVariableResolverFactory {
   /**
    * Holds the instance of the variables.
    */
-  protected Map<String, Object> variables;
+  protected final Map<String, Object> variables;
 
   public MapVariableResolverFactory() {
-    this.variables = new HashMap();
+    this.variables = new HashMap<>();
   }
 
-  public MapVariableResolverFactory(Map variables) {
+  public MapVariableResolverFactory(Map<String,Object> variables) {
     this.variables = variables;
   }
 
-  public MapVariableResolverFactory(Map<String, Object> variables, VariableResolverFactory nextFactory) {
+  public MapVariableResolverFactory(Map<String,Object> variables, VariableResolverFactory nextFactory) {
     this.variables = variables;
     this.nextFactory = nextFactory;
   }
@@ -51,7 +50,8 @@ public class MapVariableResolverFactory extends BaseVariableResolverFactory {
     this.variables = variables;
   }
 
-  public VariableResolver createVariable(String name, Object value) {
+  @Override
+	public VariableResolver createVariable(String name, Object value) {
     VariableResolver vr;
 
     try {
@@ -64,7 +64,8 @@ public class MapVariableResolverFactory extends BaseVariableResolverFactory {
     }
   }
 
-  public VariableResolver createVariable(String name, Object value, Class<?> type) {
+  @Override
+	public VariableResolver createVariable(String name, Object value, Class<?> type) {
     VariableResolver vr;
     try {
       vr = getVariableResolver(name);
@@ -82,7 +83,8 @@ public class MapVariableResolverFactory extends BaseVariableResolverFactory {
     }
   }
 
-  public VariableResolver getVariableResolver(String name) {
+  @Override
+	public VariableResolver getVariableResolver(String name) {
     VariableResolver vr = variableResolvers.get(name);
     if (vr != null) {
       return vr;
@@ -99,8 +101,9 @@ public class MapVariableResolverFactory extends BaseVariableResolverFactory {
   }
 
 
-  public boolean isResolveable(String name) {
-    return (variableResolvers.containsKey(name))
+  @Override
+	public boolean isResolveable(String name) {
+    return (variableResolvers != null && variableResolvers.containsKey(name))
         || (variables != null && variables.containsKey(name))
         || (nextFactory != null && nextFactory.isResolveable(name));
   }
@@ -111,20 +114,16 @@ public class MapVariableResolverFactory extends BaseVariableResolverFactory {
   }
 
 
-  public boolean isTarget(String name) {
+  @Override
+	public boolean isTarget(String name) {
     return variableResolvers.containsKey(name);
   }
 
-  public Set<String> getKnownVariables() {
-    if (nextFactory == null) {
-      if (variables != null) return new HashSet<String>(variables.keySet());
-      return new HashSet<String>(0);
-    }
-    else {
-      if (variables != null) return new HashSet<String>(variables.keySet());
-      return new HashSet<String>(0);
-    }
-  }
+  @Override
+	public Set<String> getKnownVariables() {
+		if (variables != null) return new HashSet<>(variables.keySet());
+		return new HashSet<>();
+	}
 
   public void clear() {
     variableResolvers.clear();

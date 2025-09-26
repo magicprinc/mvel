@@ -9,6 +9,7 @@ import org.mvel2.util.ParseTools;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -84,13 +85,26 @@ public class MVELExpressionSampleTest {
 
 	/// @see org.mvel2.tests.core.ASMConsistencyTest#testListGet
 	@Test
-	public void testBug () throws IOException {
+	public void testBug355 () throws IOException {
 		Object expr = MVEL.compileExpression(ParseTools.loadFromFile(new File("samples/scripts/issue355.mvel")));
 		MVEL.executeExpression(expr, new CachingMapVariableResolverFactory(new HashMap()));
 
+		System.out.println("---eval---");
+
 		char[] script = ParseTools.loadFromFile(new File("samples/scripts/issue355.mvel"));
-		MVEL.eval(script, this, new CachingMapVariableResolverFactory(new HashMap()));
+		MVEL.eval(script, this, new CachedMapVariableResolverFactory(new HashMap()));
 
 		MVEL.evalFile(new File("samples/scripts/issue355.mvel"), new CachedMapVariableResolverFactory(new HashMap()));
+	}
+
+	/// https://github.com/mvel/mvel/issues/380
+	@Test
+	public void testBug380 () {
+		var context = new ParserContext();
+		context.setStrictTypeEnforcement(true);
+		context.setStrongTyping(true);
+		Serializable compiled = MVEL.compileExpression("String a = 'b' return a.length();");
+		Object result = MVEL.executeExpression(compiled, context, new CachedMapVariableResolverFactory(new HashMap()));
+		assertEquals("b", result);
 	}
 }

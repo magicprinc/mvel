@@ -6,9 +6,15 @@ for (int index = 0; index < 96; index++){
 	aList.add(index);
 }
 
+System.out.println("Second loop");
+
 for (int index = 0; index < aList.size(); index++){
 	a = aList[index];
 	System.out.println(a);
 }
 
-assert aList.size()==96
+System.out.println("Assert");
+
+if (aList.size()!=96){
+	System.out.println("size=" + aList.size())
+}

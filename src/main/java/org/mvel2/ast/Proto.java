@@ -285,7 +285,8 @@ public class Proto extends ASTNode {
       return variableResolvers.indexOf(name);
     }
 
-    public VariableResolver getVariableResolver(String name) {
+    @Override
+		public VariableResolver getVariableResolver(String name) {
       VariableResolver vr = variableResolvers.get(name);
       if (vr != null) {
         return vr;

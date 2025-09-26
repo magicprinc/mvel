@@ -25,11 +25,22 @@ import org.mvel2.integration.impl.MapVariableResolverFactory;
 import org.mvel2.sh.command.basic.BasicCommandSet;
 import org.mvel2.sh.command.file.FileCommandSet;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.util.StringAppender;
 import org.mvel2.util.PropertyTools;
+import org.mvel2.util.StringAppender;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Runtime.getRuntime;
@@ -106,7 +117,7 @@ public class ShellSession {
 
     }
 
-    lvrf = new MapVariableResolverFactory(variables, new MapVariableResolverFactory(env));
+    lvrf = new MapVariableResolverFactory(variables, new MapVariableResolverFactory((Map)env));
 
   }
 

@@ -18,6 +18,17 @@
 
 package org.mvel2;
 
+import org.mvel2.ast.Function;
+import org.mvel2.ast.LineLabel;
+import org.mvel2.ast.Proto;
+import org.mvel2.compiler.AbstractParser;
+import org.mvel2.compiler.CompiledExpression;
+import org.mvel2.compiler.Parser;
+import org.mvel2.integration.Interceptor;
+import org.mvel2.util.LineMapper;
+import org.mvel2.util.MethodStub;
+import org.mvel2.util.ReflectionUtil;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -35,16 +46,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.mvel2.ast.Function;
-import org.mvel2.ast.LineLabel;
-import org.mvel2.ast.Proto;
-import org.mvel2.compiler.AbstractParser;
-import org.mvel2.compiler.CompiledExpression;
-import org.mvel2.compiler.Parser;
-import org.mvel2.integration.Interceptor;
-import org.mvel2.util.LineMapper;
-import org.mvel2.util.MethodStub;
-import org.mvel2.util.ReflectionUtil;
+import static org.mvel2.util.ArrayTools.isEmpty;
 
 /**
  * The <tt>ParserContext</tt> is the main environment object used for sharing state throughout the entire
@@ -461,7 +463,7 @@ public class ParserContext implements Serializable {
     if (variables == null) variables = new LinkedHashMap<String, Class>();
     if (inputs == null) inputs = new LinkedHashMap<String, Class>();
 
-    if (variableVisibility == null) {
+    if (isEmpty(variableVisibility)){
       pushVariableScope();
 
       Set<String> scope = getVariableScope();
@@ -475,9 +477,8 @@ public class ParserContext implements Serializable {
         Class<?> ctxType = inputs.get("this");
 
         for (Field field : ctxType.getFields()) {
-          if ((field.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) != 0) {
-            scope.add(field.getName());
-          }
+          if ((field.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) != 0)
+	            scope.add(field.getName());
         }
 
         for (Method m : ctxType.getMethods()) {
@@ -715,19 +716,18 @@ public class ParserContext implements Serializable {
     }
   }
 
-  public void makeVisible(String var) {
-    if (variableVisibility == null || variableVisibility.isEmpty()) {
-      throw new RuntimeException("no context");
-    }
+  public void makeVisible (String var) {
+		if (isEmpty(variableVisibility))
+				throw new RuntimeException("makeVisible: no context");
+
     getVariableScope().add(var);
   }
 
-  public Set<String> getVariableScope() {
-    if (variableVisibility == null || variableVisibility.isEmpty()) {
-      throw new RuntimeException("no context");
-    }
+  public Set<String> getVariableScope () {
+    if (isEmpty(variableVisibility))
+	      throw new RuntimeException("getVariableScope: no context");
 
-    return variableVisibility.get(variableVisibility.size() - 1);
+    return variableVisibility.getLast();
   }
 
   public boolean isVariableVisible(String var) {
@@ -742,9 +742,8 @@ public class ParserContext implements Serializable {
     int pos = variableVisibility.size() - 1;
 
     do {
-      if (variableVisibility.get(pos).contains(var)) {
-        return true;
-      }
+      if (variableVisibility.get(pos).contains(var))
+	        return true;
     }
     while (pos-- != 0);
 
@@ -831,7 +830,7 @@ public class ParserContext implements Serializable {
     return globalFunctions == null ? null : globalFunctions.get(name);
   }
 
-  public Map getFunctions() {
+  public Map<String,Function> getFunctions () {
     return globalFunctions == null ? Collections.emptyMap() : globalFunctions;
   }
 
