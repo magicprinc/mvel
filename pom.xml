@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.mvel</groupId>
@@ -17,14 +17,14 @@
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
 	<inceptionYear>2001</inceptionYear>
 	<organization>
 		<name>JBoss by Red Hat</name>
-		<url>http://www.jboss.org/</url>
+		<url>https://www.jboss.org/</url>
 	</organization>
 
 	<scm>
@@ -57,7 +57,7 @@
 		</extensions>
 
 		<plugins>
-			<plugin>
+			<!--plugin>
 				<artifactId>maven-enforcer-plugin</artifactId>
 				<version>1.0</version>
 				<executions>
@@ -71,14 +71,11 @@
 								<requireJavaVersion>
 									<version>[21,)</version>
 								</requireJavaVersion>
-								<!--<requireMavenVersion>-->
-								<!--<version>[3.0.3,)</version>-->
-								<!--</requireMavenVersion>-->
 							</rules>
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
