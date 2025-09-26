@@ -3,7 +3,12 @@ package org.mvel2.tests;
 import org.junit.Test;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
+import org.mvel2.integration.impl.CachedMapVariableResolverFactory;
+import org.mvel2.integration.impl.CachingMapVariableResolverFactory;
+import org.mvel2.util.ParseTools;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -77,38 +82,15 @@ public class MVELExpressionSampleTest {
 		public long creationTime;
 	}
 
+	/// @see org.mvel2.tests.core.ASMConsistencyTest#testListGet
 	@Test
-	public void testBug () {
-		var m = new HashMap<String,Object>();
+	public void testBug () throws IOException {
+		Object expr = MVEL.compileExpression(ParseTools.loadFromFile(new File("samples/scripts/issue355.mvel")));
+		MVEL.executeExpression(expr, new CachingMapVariableResolverFactory(new HashMap()));
 
-		var s = """
-java.util.List aList = [];
-for (int index = 0; index < 96; index++) {
-	aList.add(index);
-}
+		char[] script = ParseTools.loadFromFile(new File("samples/scripts/issue355.mvel"));
+		MVEL.eval(script, this, new CachingMapVariableResolverFactory(new HashMap()));
 
-for (int index = 0; index < aList.size(); index++) {
-	System.out.println(aList[index]);
-}
-aList
-			""";
-
-		MVEL.eval(s, this, m);
-
-		s = """
-			import java.util.List;
-
-			List aList = [];
-			for (int index = 0; index < 96; index++) {
-				aList.add(index);
-			}
-
-			for (int index = 0; index < aList.size(); index++) {
-				a = aList[index];
-				System.out.println(a);
-			}
-			""";
-
-		MVEL.eval(s, this, m);
+		MVEL.evalFile(new File("samples/scripts/issue355.mvel"), new CachedMapVariableResolverFactory(new HashMap()));
 	}
 }

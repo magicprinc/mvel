@@ -17,6 +17,8 @@
  */
 package org.mvel2.util;
 
+import java.util.Collection;
+
 public final class ArrayTools {
 	public static final char[] EMPTY_CHAR = new char[0];
 
@@ -36,4 +38,8 @@ public final class ArrayTools {
     }
     return -1;
   }
+
+	public static boolean isEmpty (Collection<?> c) {
+		return c == null || c.isEmpty();
+	}
 }

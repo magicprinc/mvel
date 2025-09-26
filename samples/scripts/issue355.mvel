@@ -1,0 +1,14 @@
+// https://github.com/mvel/mvel/issues/355
+import java.util.List;
+
+List aList = [];
+for (int index = 0; index < 96; index++){
+	aList.add(index);
+}
+
+for (int index = 0; index < aList.size(); index++){
+	a = aList[index];
+	System.out.println(a);
+}
+
+assert aList.size()==96
