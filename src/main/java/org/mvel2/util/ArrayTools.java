@@ -17,9 +17,12 @@
  */
 package org.mvel2.util;
 
-public class ArrayTools {
+public final class ArrayTools {
+	public static final char[] EMPTY_CHAR = new char[0];
 
-  public static int findFirst(char c, int start, int offset, char[] array) {
+
+	/// @see ParseTools#find(char[], int, int, char)
+  public static int findFirst (char c, int start, int offset, char[] array) {
     int end = start + offset;
     for (int i = start; i < end; i++) {
       if (array[i] == c) return i;

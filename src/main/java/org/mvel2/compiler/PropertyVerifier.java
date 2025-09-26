@@ -18,6 +18,19 @@
 
 package org.mvel2.compiler;
 
+import org.mvel2.CompileException;
+import org.mvel2.ErrorDetail;
+import org.mvel2.MVEL;
+import org.mvel2.ParserContext;
+import org.mvel2.ast.Function;
+import org.mvel2.optimizers.AbstractOptimizer;
+import org.mvel2.optimizers.impl.refl.nodes.WithAccessor;
+import org.mvel2.util.ArrayTools;
+import org.mvel2.util.ErrorUtil;
+import org.mvel2.util.NullType;
+import org.mvel2.util.ParseTools;
+import org.mvel2.util.StringAppender;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.Member;
@@ -34,19 +47,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.mvel2.CompileException;
-import org.mvel2.ErrorDetail;
-import org.mvel2.MVEL;
-import org.mvel2.ParserContext;
-import org.mvel2.ast.Function;
-import org.mvel2.optimizers.AbstractOptimizer;
-import org.mvel2.optimizers.impl.refl.nodes.WithAccessor;
-import org.mvel2.util.ErrorUtil;
-import org.mvel2.util.NullType;
-import org.mvel2.util.ParseTools;
-import org.mvel2.util.StringAppender;
-
-import static org.mvel2.util.ParseTools.*;
+import static org.mvel2.util.ParseTools.balancedCapture;
+import static org.mvel2.util.ParseTools.balancedCaptureWithLineAccounting;
+import static org.mvel2.util.ParseTools.findClass;
+import static org.mvel2.util.ParseTools.getBestCandidate;
+import static org.mvel2.util.ParseTools.getSubComponentType;
+import static org.mvel2.util.ParseTools.parseParameterList;
 import static org.mvel2.util.PropertyTools.getFieldOrAccessor;
 
 /**
@@ -217,9 +223,8 @@ public class PropertyVerifier extends AbstractOptimizer {
             for (int i = 0; i < gpt.length; i++) {
               paramTypes.put(classArgs[i].toString(), gpt[i]);
             }
-          } else if (f.getGenericType() instanceof TypeVariable) {
-            TypeVariable tv = (TypeVariable) f.getGenericType();
-            Type paramType = paramTypes.remove(tv.getName());
+          } else if (f.getGenericType() instanceof TypeVariable tv){
+						Type paramType = paramTypes.remove(tv.getName());
             if (paramType != null && paramType instanceof Class) {
               return (Class) paramType;
             }
@@ -293,14 +298,12 @@ public class PropertyVerifier extends AbstractOptimizer {
 
     if (pCtx!=null&& pCtx.getParserConfiguration()!=null?pCtx.getParserConfiguration().isAllowNakedMethCall():MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
       Class cls = getMethod(ctx, property);
-      if (cls != Object.class) {
-        return cls;
-      }
+      if (cls != Object.class)
+	        return cls;
     }
 
-    if (pCtx.isStrictTypeEnforcement()) {
-      throw new CompileException("unqualified type in strict mode for: " + property, expr, tkStart);
-    }
+    if (pCtx.isStrictTypeEnforcement())
+	      throw new CompileException("unqualified type in strict mode for: " + property, expr, tkStart);
 
     return Object.class;
   }
@@ -368,7 +371,7 @@ public class PropertyVerifier extends AbstractOptimizer {
     }
 
     if (paramTypes != null && paramTypes.containsKey(returnTypeArg)) {
-        /**
+        /*
          * If the paramTypes Map contains the known type, return that type.
          */
         return type2Class( paramTypes.get(returnTypeArg) );
@@ -444,21 +447,21 @@ public class PropertyVerifier extends AbstractOptimizer {
   private Class getMethod(Class ctx, String name) {
     int st = cursor;
 
-    /**
+    /*
      * Check to see if this is the first element in the statement.
      */
     if (first) {
       first = false;
       methodCall = true;
 
-      /**
+      /*
        * It's the first element in the statement, therefore we check to see if there is a static import of a
        * native Java method or an MVEL function.
        */
       if (pCtx.hasImport(name)) {
         Method m = pCtx.getStaticImport(name).getMethod();
 
-        /**
+        /*
          * Replace the method parameters.
          */
         ctx = m.getDeclaringClass();
@@ -471,7 +474,7 @@ public class PropertyVerifier extends AbstractOptimizer {
           f.checkArgumentCount(
                   parseParameterList(
                           (((cursor = balancedCapture(expr, cursor, end, '(')) - st) > 1 ?
-                           ParseTools.subset(expr, st + 1, cursor - st - 1) : new char[0]), 0, -1).size());
+                           ParseTools.subset(expr, st + 1, cursor - st - 1) : ArrayTools.EMPTY_CHAR), 0, -1).size());
 
           return f.getEgressType();
         }
@@ -485,7 +488,7 @@ public class PropertyVerifier extends AbstractOptimizer {
       }
     }
 
-    /**
+    /*
      * Get the arguments for the method.
      */
     String tk;
@@ -499,7 +502,7 @@ public class PropertyVerifier extends AbstractOptimizer {
 
     cursor++;
 
-    /**
+    /*
      * Parse out the arguments list.
      */
     Class[] args;
@@ -513,7 +516,7 @@ public class PropertyVerifier extends AbstractOptimizer {
       //   ParserContext subCtx = pCtx.createSubcontext();
       args = new Class[subtokens.size()];
 
-      /**
+      /*
        *  Subcompile all the arguments to determine their known types.
        */
       //  ExpressionCompiler compiler;
@@ -553,14 +556,14 @@ public class PropertyVerifier extends AbstractOptimizer {
       }
     }
 
-    /**
+    /*
      * If the target object is an instance of java.lang.Class itself then do not
      * adjust the Class scope target.
      */
 
     Method m;
 
-    /**
+    /*
      * If we have not cached the method then we need to go ahead and try to resolve it.
      */
 
@@ -578,14 +581,14 @@ public class PropertyVerifier extends AbstractOptimizer {
 
         if (pCtx.isStrictTypeEnforcement()) {
           throw new CompileException("unable to resolve method using strict-mode: "
-              + ctx.getName() + "." + name + "(" + errorBuild.toString() + ")", expr, tkStart);
+              + ctx.getName() + "." + name + "(" + errorBuild + ")", expr, tkStart);
         }
 
         return Object.class;
       }
     }
 
-    /**
+    /*
      * If we're in strict mode, we look for generic type information.
      */
     if (pCtx.isStrictTypeEnforcement() && m.getGenericReturnType() != null) {

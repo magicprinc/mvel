@@ -76,4 +76,39 @@ public class MVELExpressionSampleTest {
 		public int contentInstanceId = 42;
 		public long creationTime;
 	}
+
+	@Test
+	public void testBug () {
+		var m = new HashMap<String,Object>();
+
+		var s = """
+java.util.List aList = [];
+for (int index = 0; index < 96; index++) {
+	aList.add(index);
+}
+
+for (int index = 0; index < aList.size(); index++) {
+	System.out.println(aList[index]);
+}
+aList
+			""";
+
+		MVEL.eval(s, this, m);
+
+		s = """
+			import java.util.List;
+
+			List aList = [];
+			for (int index = 0; index < 96; index++) {
+				aList.add(index);
+			}
+
+			for (int index = 0; index < aList.size(); index++) {
+				a = aList[index];
+				System.out.println(a);
+			}
+			""";
+
+		MVEL.eval(s, this, m);
+	}
 }

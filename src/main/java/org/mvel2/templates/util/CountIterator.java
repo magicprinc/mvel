@@ -9,20 +9,26 @@ import java.util.Iterator;
  */
 public class CountIterator implements Iterator {
   int cursor;
-  int countTo;
+  final int countTo;
 
   public CountIterator(int countTo) {
     this.countTo = countTo;
   }
 
-  public boolean hasNext() {
+  @Override
+	public boolean hasNext() {
     return cursor < countTo;
   }
 
-  public Object next() {
+  @Override
+	public Object next() {
     return cursor++;
   }
 
-  public void remove() {
-  }
+  @Override public void remove (){}
+
+	@Override
+	public String toString () {
+		return "CountIterator: %d of %d".formatted(cursor, countTo);
+	}
 }

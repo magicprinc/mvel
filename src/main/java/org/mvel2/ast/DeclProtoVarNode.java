@@ -21,6 +21,7 @@ package org.mvel2.ast;
 import org.mvel2.ParserContext;
 import org.mvel2.compiler.ExecutableStatement;
 import org.mvel2.integration.VariableResolverFactory;
+import org.mvel2.util.ArrayTools;
 
 import static org.mvel2.util.ParseTools.checkNameSafety;
 
@@ -28,7 +29,7 @@ import static org.mvel2.util.ParseTools.checkNameSafety;
  * @author Christopher Brock
  */
 public class DeclProtoVarNode extends ASTNode implements Assignment {
-  private String name;
+  private final String name;
 
   public DeclProtoVarNode(String name, Proto type, int fields, ParserContext pCtx) {
     super(pCtx);
@@ -40,44 +41,53 @@ public class DeclProtoVarNode extends ASTNode implements Assignment {
     }
   }
 
-  public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+  @Override
+	public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     if (!factory.isResolveable(name)) factory.createVariable(name, null, egressType);
     else throw new RuntimeException("variable defined within scope: " + name);
     return null;
   }
 
-  public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+  @Override
+	public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     if (!factory.isResolveable(name)) factory.createVariable(name, null, egressType);
     else throw new RuntimeException("variable defined within scope: " + name);
 
     return null;
   }
 
-  public String getName() {
+  @Override
+	public String getName() {
     return name;
   }
 
-  public String getAssignmentVar() {
+  @Override
+	public String getAssignmentVar() {
     return name;
   }
 
-  public char[] getExpression() {
-    return new char[0];
+  @Override
+	public char[] getExpression() {
+    return ArrayTools.EMPTY_CHAR;
   }
 
-  public boolean isAssignment() {
+  @Override
+	public boolean isAssignment() {
     return true;
   }
 
-  public boolean isNewDeclaration() {
+  @Override
+	public boolean isNewDeclaration() {
     return true;
   }
 
-  public void setValueStatement(ExecutableStatement stmt) {
+  @Override
+	public void setValueStatement(ExecutableStatement stmt) {
     throw new RuntimeException("illegal operation");
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     return "var:" + name;
   }
 }

@@ -22,6 +22,7 @@ import org.mvel2.CompileException;
 import org.mvel2.ParserContext;
 import org.mvel2.compiler.ExecutableStatement;
 import org.mvel2.integration.VariableResolverFactory;
+import org.mvel2.util.ArrayTools;
 
 import static org.mvel2.util.ParseTools.checkNameSafety;
 
@@ -66,7 +67,7 @@ public class DeclTypedVarNode extends ASTNode implements Assignment {
   }
 
   public char[] getExpression() {
-    return new char[0];
+    return ArrayTools.EMPTY_CHAR;
   }
 
   public boolean isAssignment() {

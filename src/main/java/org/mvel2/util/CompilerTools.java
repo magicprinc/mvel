@@ -18,9 +18,6 @@
 
 package org.mvel2.util;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.mvel2.CompileException;
 import org.mvel2.Operator;
 import org.mvel2.ParserContext;
@@ -50,6 +47,9 @@ import org.mvel2.compiler.ExecutableAccessor;
 import org.mvel2.compiler.ExecutableLiteral;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.integration.impl.ClassImportResolverFactory;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.mvel2.Operator.PTABLE;
 import static org.mvel2.Operator.TERNARY;
@@ -395,12 +395,12 @@ public class CompilerTools {
       if ((retType == null || !boxPrimitive(type).isAssignableFrom(boxPrimitive(retType))) && (!Object.class.equals(retType)
           || pCtx.isStrictTypeEnforcement())) {
         throw new CompileException("was expecting type: " + type.getName() + "; but found type: "
-            + (retType != null ? retType.getName() : "<Unknown>"), new char[0], 0);
+            + (retType != null ? retType.getName() : "<Unknown>"), ArrayTools.EMPTY_CHAR, 0);
       }
     }
     else if (retType == null || !Object.class.equals(retType) && !boxPrimitive(type).isAssignableFrom(boxPrimitive(retType))) {
       throw new CompileException("was expecting type: " + type.getName() + "; but found type: "
-          + (retType != null ? retType.getName() : "<Unknown>"), new char[0], 0);
+          + (retType != null ? retType.getName() : "<Unknown>"), ArrayTools.EMPTY_CHAR, 0);
     }
   }
 
@@ -409,12 +409,12 @@ public class CompilerTools {
     if (compileMode) {
       if ((retType == null || !boxPrimitive(type).isAssignableFrom(retType)) && (!Object.class.equals(retType) && pCtx.isStrictTypeEnforcement())) {
         throw new CompileException("was expecting type: " + type.getName() + "; but found type: "
-            + (retType != null ? retType.getName() : "<Unknown>"), new char[0], 0);
+            + (retType != null ? retType.getName() : "<Unknown>"), ArrayTools.EMPTY_CHAR, 0);
       }
     }
     else if (retType == null || !Object.class.equals(retType) && !boxPrimitive(type).isAssignableFrom(retType)) {
       throw new CompileException("was expecting type: " + type.getName() + "; but found type: "
-          + (retType != null ? retType.getName() : "<Unknown>"), new char[0], 0);
+          + (retType != null ? retType.getName() : "<Unknown>"), ArrayTools.EMPTY_CHAR, 0);
     }
   }
 
@@ -492,7 +492,7 @@ public class CompilerTools {
       return -((Short) number);
     }
     else {
-      throw new CompileException("expected a numeric type but found: " + number.getClass().getName(), new char[0], 0);
+      throw new CompileException("expected a numeric type but found: " + number.getClass().getName(), ArrayTools.EMPTY_CHAR, 0);
     }
   }
 

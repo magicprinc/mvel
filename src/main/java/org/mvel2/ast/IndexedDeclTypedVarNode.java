@@ -21,12 +21,13 @@ package org.mvel2.ast;
 import org.mvel2.ParserContext;
 import org.mvel2.compiler.ExecutableStatement;
 import org.mvel2.integration.VariableResolverFactory;
+import org.mvel2.util.ArrayTools;
 
 /**
  * @author Christopher Brock
  */
 public class IndexedDeclTypedVarNode extends ASTNode implements Assignment {
-  private int register;
+  private final int register;
 
   public IndexedDeclTypedVarNode(int register, int start, int offset, Class type, ParserContext pCtx) {
     super(pCtx);
@@ -36,33 +37,40 @@ public class IndexedDeclTypedVarNode extends ASTNode implements Assignment {
     this.register = register;
   }
 
-  public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+  @Override
+	public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     factory.createIndexedVariable(register, null, egressType);
     return ctx;
   }
 
-  public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+  @Override
+	public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     factory.createIndexedVariable(register, null, egressType);
     return null;
   }
 
-  public String getAssignmentVar() {
+  @Override
+	public String getAssignmentVar() {
     return null;
   }
 
-  public char[] getExpression() {
-    return new char[0];
+  @Override
+	public char[] getExpression() {
+    return ArrayTools.EMPTY_CHAR;
   }
 
-  public boolean isAssignment() {
+  @Override
+	public boolean isAssignment() {
     return true;
   }
 
-  public boolean isNewDeclaration() {
+  @Override
+	public boolean isNewDeclaration() {
     return true;
   }
 
-  public void setValueStatement(ExecutableStatement stmt) {
+  @Override
+	public void setValueStatement(ExecutableStatement stmt) {
     throw new RuntimeException("illegal operation");
   }
 }

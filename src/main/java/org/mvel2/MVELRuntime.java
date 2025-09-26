@@ -25,15 +25,20 @@ import org.mvel2.debug.Debugger;
 import org.mvel2.debug.DebuggerContext;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.optimizers.OptimizerFactory;
+import org.mvel2.util.ArrayTools;
 import org.mvel2.util.ExecutionStack;
 
-import static org.mvel2.Operator.*;
+import static org.mvel2.Operator.CHOR;
+import static org.mvel2.Operator.END_OF_STMT;
+import static org.mvel2.Operator.NOOP;
+import static org.mvel2.Operator.RETURN;
+import static org.mvel2.Operator.TERNARY;
+import static org.mvel2.Operator.TERNARY_ELSE;
 import static org.mvel2.util.PropertyTools.isEmpty;
 
 /**
  * This class contains the runtime for running compiled MVEL expressions.
  */
-@SuppressWarnings({"CaughtExceptionImmediatelyRethrown"})
 public class MVELRuntime {
   // public static final ImmutableDefaultFactory IMMUTABLE_DEFAULT_FACTORY = new ImmutableDefaultFactory();
   private static ThreadLocal<DebuggerContext> debuggerContext;
@@ -61,7 +66,7 @@ public class MVELRuntime {
     try {
       do {
         if (tk.fields == -1) {
-          /**
+          /*
            * This may seem silly and redundant, however, when an MVEL script recurses into a block
            * or substatement, a new runtime loop is entered.   Since the debugger state is not
            * passed through the AST, it is not possible to forward the state directly.  So when we
@@ -112,7 +117,7 @@ public class MVELRuntime {
             return stk.pop();
 
           case END_OF_STMT:
-            /**
+            /*
              * If the program doesn't end here then we wipe anything off the stack that remains.
              * Althought it may seem like intuitive stack optimizations could be leveraged by
              * leaving hanging values on the stack,  trust me it's not a good idea.
@@ -144,13 +149,13 @@ public class MVELRuntime {
           }
         }
         catch (ClassCastException e) {
-          throw new CompileException("syntax error or incomptable types", new char[0], 0, e);
+          throw new CompileException("syntax error or incomptable types", ArrayTools.EMPTY_CHAR, 0, e);
         }
         catch (CompileException e) {
           throw e;
         }
         catch (Exception e) {
-          throw new CompileException("failed to compileShared sub expression", new char[0], 0, e);
+          throw new CompileException("failed to compileShared sub expression", ArrayTools.EMPTY_CHAR, 0, e);
         }
       }
       while ((tk = tk.nextASTNode) != null);
