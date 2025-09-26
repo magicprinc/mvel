@@ -702,20 +702,21 @@ public class MathProcessor {
     throw new RuntimeException("cannot convert <" + in + "> to a numeric type: " + in.getClass() + " [" + type + "]");
   }
 
-  private static BigDecimal asBigDecimal(Object in) {
-    if (in == null || in == BlankLiteral.INSTANCE) {
-      return null;
-    }
-    if (in instanceof BigDecimal) {
-      return (BigDecimal) in;
-    }
-    if (in instanceof String) {
-      return new BigDecimal((String) in);
-    }
-    if (in instanceof Number) {
-      return new BigDecimal(((Number) in).doubleValue());
-    }
-
+  private static BigDecimal asBigDecimal (Object in) {
+		if (in == null || in == BlankLiteral.INSTANCE)
+				return null;
+		if (in instanceof BigDecimal bd)
+				return bd;
+		if (in instanceof BigInteger bi)
+				return new BigDecimal(bi, 0);
+		if (in instanceof String s)
+				return new BigDecimal(s);
+    if (in instanceof Number n){
+			BigDecimal x = BigDecimal.valueOf(n.doubleValue()).stripTrailingZeros();
+			if (x.scale() < 0)// ~ 1E+3
+					x = x.setScale(0);
+			return x;
+		}
     throw new RuntimeException("cannot convert <" + in + "> to a numeric type: " + in.getClass());
   }
 }
