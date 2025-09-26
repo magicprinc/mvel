@@ -28,19 +28,22 @@ import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import static java.lang.String.valueOf;
 import static org.mvel2.DataConversion.convert;
 import static org.mvel2.DataTypes.BIG_DECIMAL;
 import static org.mvel2.DataTypes.EMPTY;
 import static org.mvel2.Operator.*;
-import static org.mvel2.util.ParseTools.*;
+import static org.mvel2.util.ParseTools.__resolveType;
+import static org.mvel2.util.ParseTools.isNumber;
+import static org.mvel2.util.ParseTools.narrowType;
 import static org.mvel2.util.Soundex.soundex;
 
 /**
  * @author Christopher Brock
  */
-public strictfp class MathProcessor {
+public class MathProcessor {
   private static final MathContext MATH_CONTEXT = MathContext.DECIMAL128;
 
   public static Object doOperations(Object val1, int operation, Object val2) {
@@ -122,7 +125,7 @@ public strictfp class MathProcessor {
       case DataTypes.SHORT:
         return val.shortValue();
       case DataTypes.BIG_DECIMAL:
-        return new BigDecimal(val.doubleValue());
+        return asBigDecimal(val);
       case DataTypes.BIG_INTEGER:
         return BigInteger.valueOf(val.longValue());
 
@@ -243,11 +246,11 @@ public strictfp class MathProcessor {
           return list;
         }
         else {
-          return valueOf(val1) + valueOf(val2);
+          return valueOf(val1) + val2;
         }
 
       case EQUAL:
-        return safeEquals(val2, val1);
+        return Objects.equals(val2, val1);
 
       case NEQUAL:
         return safeNotEquals(val2, val1);
@@ -287,12 +290,10 @@ public strictfp class MathProcessor {
 
 
       case LTHAN:
-        if (val1 instanceof Comparable) {
-          //noinspection unchecked
-          try {
+        if (val1 instanceof Comparable){
+					try {
             return val2 != null && ((Comparable) val1).compareTo(val2) <= -1;
-          }
-          catch (ClassCastException e) {
+          } catch (ClassCastException e){
             throw new RuntimeException("uncomparable values <<" + val1 + ">> and <<" + val2 + ">>", e);
           }
 
@@ -321,27 +322,20 @@ public strictfp class MathProcessor {
         return soundex(String.valueOf(val1)).equals(soundex(String.valueOf(val2)));
 
       case STR_APPEND:
-        return valueOf(val1) + valueOf(val2);
+        return valueOf(val1) + val2;
     }
 
     throw new RuntimeException("could not perform numeric operation on non-numeric types: left-type="
         + (val1 != null ? val1.getClass().getName() : "null") + "; right-type="
         + (val2 != null ? val2.getClass().getName() : "null")
-        + " [vals (" + valueOf(val1) + ", " + valueOf(val2) + ") operation=" + DebugTools.getOperatorName(operation) + " (opcode:" + operation + ") ]");
+        + " [vals (" + valueOf(val1) + ", " + val2 + ") operation=" + DebugTools.getOperatorName(operation) + " (opcode:" + operation + ") ]");
   }
 
-  private static Boolean safeEquals(final Object val1, final Object val2) {
-    if (val1 != null) {
-      return val1.equals(val2);
-    }
-    else return val2 == null;
-  }
-
-  private static Boolean safeNotEquals(final Object val1, final Object val2) {
-    if (val1 != null) {
-      return !val1.equals(val2);
-    }
-    else return val2 != null;
+  private static boolean safeNotEquals (Object val1, Object val2) {
+    if (val1 != null)
+	      return !val1.equals(val2);
+    else
+				return val2 != null;
   }
 
   private static Object doOperationsSameType(int type1, Object val1, int operation, Object val2) {
@@ -621,11 +615,11 @@ public strictfp class MathProcessor {
       default:
         switch (operation) {
           case EQUAL:
-            return safeEquals(val2, val1);
+            return Objects.equals(val2, val1);
           case NEQUAL:
             return safeNotEquals(val2, val1);
           case ADD:
-            return valueOf(val1) + valueOf(val2);
+            return valueOf(val1) + val2;
         }
     }
     return null;
@@ -706,10 +700,7 @@ public strictfp class MathProcessor {
     }
 
     throw new RuntimeException("cannot convert <" + in + "> to a numeric type: " + in.getClass() + " [" + type + "]");
-
-
   }
-
 
   private static BigDecimal asBigDecimal(Object in) {
     if (in == null || in == BlankLiteral.INSTANCE) {
