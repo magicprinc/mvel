@@ -14,14 +14,23 @@ import org.mvel2.tests.core.res.Cake;
 import org.mvel2.tests.core.res.Foo;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static org.mvel2.MVEL.compileExpression;
 import static org.mvel2.MVEL.executeExpression;
 
 
 public class PropertyAccessTests extends AbstractTest {
-  protected void setUp() throws Exception {
+  @Override
+	protected void setUp() throws Exception {
     super.setUp();
     // Ensure MVEL settings are not leaked across tests
     MVEL.COMPILER_OPT_ALLOW_OVERRIDE_ALL_PROPHANDLING = false;
@@ -391,7 +400,7 @@ public class PropertyAccessTests extends AbstractTest {
     a.map = nestMap;
     assertEquals("bar", MVEL.executeExpression(s, m));
   }
-  
+
   private void infiniteLoop() {
     try {
       Serializable compiled = MVEL.compileExpression("a['b']['c']");
@@ -425,7 +434,7 @@ public class PropertyAccessTests extends AbstractTest {
       // ignore
     }
   }
-  
+
   public void testInfiniteLoopAO() {
     MVEL.COMPILER_OPT_ALLOW_OVERRIDE_ALL_PROPHANDLING = true;
     testInfiniteLoop();
@@ -458,7 +467,7 @@ public class PropertyAccessTests extends AbstractTest {
       assertEquals("1", MVEL.executeExpression(getFooExpression, vars));
       vars.put("foo", Collections.singletonList("1"));
       assertEquals("1", MVEL.executeExpression(getFooExpression, vars));
-            
+
       // List -> Array
       vars.put("foo", new String[]{"1", "2", "3"});
       assertEquals("1", MVEL.executeExpression(getFooExpression, vars));
@@ -583,7 +592,7 @@ public class PropertyAccessTests extends AbstractTest {
         Assert.assertTrue(pae.getMessage().contains("Error: unable to resolve method"));
       }
     }
-    
+
     public void testPrivateMethodCompiled() {
       Map<String, Object> vars = new HashMap<>();
       vars.put("service", new Service());

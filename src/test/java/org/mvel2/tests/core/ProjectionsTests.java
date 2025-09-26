@@ -2,7 +2,6 @@ package org.mvel2.tests.core;
 
 import org.mvel2.MVEL;
 import org.mvel2.tests.core.res.Base;
-import org.mvel2.util.Make;
 
 import java.util.ArrayList;
 import java.util.Arrays;

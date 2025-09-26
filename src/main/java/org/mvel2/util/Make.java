@@ -132,19 +132,18 @@ public class Make {
     public static <V> Set<V> start(Class<? extends java.util.Set> listImpl) {
       try {
         return new Set(listImpl.newInstance());
-      }
-      catch (Throwable t) {
+      } catch (Throwable t) {
         throw new RuntimeException("error creating instance", t);
       }
     }
 
-    private java.util.Set<V> listInstance;
+    private final java.util.Set<V> listInstance;
 
     Set(java.util.Set<V> listInstance) {
       this.listInstance = listInstance;
     }
 
-    public Set<V> _(V value) {
+    public Set<V> $ (V value) {
       listInstance.add(value);
       return this;
     }

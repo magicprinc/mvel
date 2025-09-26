@@ -1,10 +1,10 @@
 package org.mvel2.tests.core;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.mvel2.MVEL;
 import org.mvel2.tests.BaseMvelTestCase;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * @author yone098
@@ -13,7 +13,8 @@ public class MVELTest extends BaseMvelTestCase {
 
   private File file;
 
-  public void setUp() {
+  @Override
+	public void setUp() {
     file = new File("samples/scripts/multibyte.mvel");
   }
 

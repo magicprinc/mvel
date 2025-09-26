@@ -1,9 +1,6 @@
 package org.mvel2.tests.core;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.mvel2.MVEL;
 import org.mvel2.MVELRuntime;
 import org.mvel2.Macro;
@@ -22,6 +19,9 @@ import org.mvel2.integration.impl.MapVariableResolverFactory;
 import org.mvel2.tests.BaseMvelTestCase;
 import org.mvel2.tests.core.res.Foo;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.mvel2.MVEL.executeExpression;
 import static org.mvel2.MVEL.parseMacros;
 
@@ -29,7 +29,8 @@ public class MacroProcessorTest extends BaseMvelTestCase {
 
   private MacroProcessor macroProcessor;
 
-  protected void setUp() throws Exception {
+  @Override
+	protected void setUp() throws Exception {
     super.setUp();
     Map<String, Macro> macros = new HashMap<String, Macro>();
     macros.put("insert",
