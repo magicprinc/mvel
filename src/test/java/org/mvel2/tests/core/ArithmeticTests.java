@@ -1011,8 +1011,8 @@ public class ArithmeticTests extends AbstractTest {
     Boolean result = (Boolean) MVEL.executeExpression(stmt, vars);
     assertTrue(result);
   }
-  
-  public void testStaticMathCeil() {      
+
+  public void testStaticMathCeil() {
     int x = 4;
     int m = (int) java.lang.Math.ceil( x/3.0 ); // demonstrating it's perfectly valid java
 
@@ -1028,9 +1028,9 @@ public class ArithmeticTests extends AbstractTest {
     Map vars = new HashMap();
     vars.put("x", 4);
     assertEquals(new Integer( 2 ), MVEL.executeExpression(stmt, vars));
-  }  
+  }
 
-  public void testStaticMathCeilWithJavaClassStyleLiterals() {            
+  public void testStaticMathCeilWithJavaClassStyleLiterals() {
     MVEL.COMPILER_OPT_SUPPORT_JAVA_STYLE_CLASS_LITERALS = true;
     try {
       String str = "java.lang.Math.ceil( x/3.0 )";
@@ -1049,7 +1049,7 @@ public class ArithmeticTests extends AbstractTest {
       MVEL.COMPILER_OPT_SUPPORT_JAVA_STYLE_CLASS_LITERALS = false;
     }
   }
-  
+
   public void testMathCeilWithDoubleCast() {
     String str = "Math.ceil( (double) x / 3 )";
 
@@ -1065,18 +1065,20 @@ public class ArithmeticTests extends AbstractTest {
     vars.put("x", 4);
     assertEquals(Math.ceil((double) 4 / 3), MVEL.executeExpression(stmt, vars));
   }
-  
+
   public void testBigDecimalAssignmentIncrement() {
     String str = "s1=0B;s1+=1;s1+=1;s1";
     Serializable expr = MVEL.compileExpression(str);
     Object result = MVEL.executeExpression(expr, new HashMap<String, Object>());
-    assertEquals(new BigDecimal(2), result);
+    assertEquals(BigDecimal.valueOf(2), result);
+
+		result = BigDecimal.ZERO.add(java.math.BigDecimal.ONE).add(java.math.BigDecimal.ONE);
+		assertEquals(BigDecimal.valueOf(2), result);
   }
-  
-  public void testIssue249() {
-    /* https://github.com/mvel/mvel/issues/249
-     * The following caused a ClassCastException because the compiler optimized for integers
-     */
+
+	/// https://github.com/mvel/mvel/issues/249
+	/// The following caused a ClassCastException because the compiler optimized for integers
+	public void testIssue249() {
     String rule = "70 + 30 *  x1";
     ParserContext parserContext = new ParserContext();
     Serializable compileExpression = MVEL.compileExpression(rule, parserContext);
@@ -1085,4 +1087,12 @@ public class ArithmeticTests extends AbstractTest {
     Object result = MVEL.executeExpression(compileExpression, parserContext, expressionVars);
     Assert.assertEquals(3919.9, ((Number)result).doubleValue(), 0.01);
   }
+
+	/// https://github.com/mvel/mvel/pull/341
+	public void testIssue321() {
+		Map<String, Object> vars = new HashMap<>();
+		vars.put("a", BigDecimal.valueOf(19.8));
+		Object result = MVEL.eval("a>=19.8", vars);
+		Assert.assertTrue((boolean) result);
+	}
 }
