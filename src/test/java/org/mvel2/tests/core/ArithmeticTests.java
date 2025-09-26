@@ -1090,9 +1090,39 @@ public class ArithmeticTests extends AbstractTest {
 
 	/// https://github.com/mvel/mvel/pull/341
 	public void testIssue321() {
-		Map<String, Object> vars = new HashMap<>();
-		vars.put("a", BigDecimal.valueOf(19.8));
-		Object result = MVEL.eval("a>=19.8", vars);
+		BigDecimal a = BigDecimal.valueOf(19.8);
+		Assert.assertTrue(a.compareTo(new BigDecimal("19.8")) >= 0);
+
+		assertEquals("1", new BigDecimal("1.000").stripTrailingZeros().toString());
+		BigDecimal x = new BigDecimal("1000.000").stripTrailingZeros();
+		assertEquals(-3, x.scale());
+		assertEquals("1E+3", x.toString());
+		if (x.scale() < 0) x = x.setScale(0);
+		assertEquals("1000", x.toString());
+
+		Object result = MVEL.eval("a>=19.8", Map.of("a", a));
 		Assert.assertTrue((boolean) result);
+	}
+
+	/// https://github.com/mvel/mvel/issues/369
+	public void testMax () {
+		Object result = MVEL.eval("Math.max(5.1, 20.0)");
+		assertEquals(Double.class, result.getClass());
+		assertEquals(20.0, result);
+
+		result = MVEL.eval("Math.max(5.1, 20)");
+		assertEquals(Integer.class, result.getClass());
+		assertEquals(20, result);
+
+		result = MVEL.eval("Math.max(5, 20.1)");
+		assertEquals(Integer.class, result.getClass());
+		assertEquals(20, result);// wrong
+
+		result = test("Math.min(5.1, 20)");
+		assertEquals(5, result);
+		assertEquals(Integer.class, result.getClass());// todo wrong
+
+		result = test("Math.max(5.1, 20)");
+		assertEquals(Integer.class, result.getClass());
 	}
 }
