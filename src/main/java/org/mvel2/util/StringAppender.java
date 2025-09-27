@@ -18,211 +18,108 @@
 
 package org.mvel2.util;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-
-import static java.lang.System.arraycopy;
+import static java.nio.charset.StandardCharsets.*;
 
 /**
  *
  * @author Mike Brock
  */
 public class StringAppender implements CharSequence {
-  private static final int DEFAULT_SIZE = 15;
-
-  private char[] str;
-  private int capacity;
-  private int size = 0;
-  private byte[] btr;
-  private String encoding;
+	final StringBuilder sb;
 
   public StringAppender() {
-    str = new char[capacity = DEFAULT_SIZE];
+    sb = new StringBuilder(99);
   }
 
-  public StringAppender(final int capacity) {
-    str = new char[this.capacity = capacity];
+  public StringAppender (int capacity) {
+    sb = new StringBuilder(capacity);
   }
 
-  public StringAppender(final int capacity, final String encoding) {
-    str = new char[this.capacity = capacity];
-    this.encoding = encoding;
+  public StringAppender(char c) {
+		this();
+		sb.append(c);
   }
 
-  public StringAppender(final char c) {
-    (str = new char[this.capacity = DEFAULT_SIZE])[0] = c;
+  public StringAppender (char[] s) {
+    this();
+		sb.append(s);
   }
 
-  public StringAppender(final char[] s) {
-    capacity = size = (str = s).length;
+  public StringAppender (CharSequence s) {
+		this();
+		sb.append(s);
   }
 
-  public StringAppender(final CharSequence s) {
-    str = new char[this.capacity = size = s.length()];
-    for (int i = 0; i < str.length; i++)
-      str[i] = s.charAt(i);
-
-  }
-
-  public StringAppender(final String s) {
-    capacity = size = (str = s.toCharArray()).length;
-  }
-
-  public StringAppender append(final char[] chars) {
-    if (chars.length > (capacity - size)) grow(chars.length);
-    for (int i = 0; i < chars.length; size++) {
-      str[size] = chars[i++];
-    }
+  public StringAppender append (char[] chars) {
+		if (chars != null)
+			sb.append(chars);
     return this;
   }
 
-  public StringAppender append(final byte[] chars) {
-    if (chars.length > (capacity - size)) grow(chars.length);
-    for (int i = 0; i < chars.length; size++) {
-      str[size] = (char) chars[i++];
-    }
+  public StringAppender append (char[] chars, int start, int length) {
+    sb.append(chars, start, length);
     return this;
   }
 
-  public StringAppender append(final char[] chars, final int start, final int length) {
-    if (length > (capacity - size)) grow(length);
-    int x = start + length;
-    for (int i = start; i < x; i++) {
-      str[size++] = chars[i];
-    }
+  public StringAppender append (Object o) {
+		if (o != null)
+			sb.append(o);
+		return this;
+  }
+
+	public StringAppender append (byte[] o) {
+		if (o != null)
+			sb.append(new String(o, UTF_8));
+		return this;
+	}
+
+  public StringAppender append (CharSequence s) {
+		if (s != null)
+			sb.append(s);
     return this;
   }
 
-  public StringAppender append(final byte[] chars, final int start, final int length) {
-    if (length > (capacity - size)) grow(length);
-    int x = start + length;
-    for (int i = start; i < x; i++) {
-      str[size++] = (char) chars[i];
-    }
+  public StringAppender append (char c) {
+		sb.append(c);
     return this;
   }
 
-  public StringAppender append(final Object o) {
-    return append(String.valueOf(o));
+	public StringAppender append (byte c) {
+		sb.append((char)c);
+		return this;
+	}
+
+  @Override public int length (){ return sb.length(); }
+
+  public char[] toChars () {
+		int len = sb.length();
+		var chars = new char[len];
+		sb.getChars(0, len, chars, 0);
+		return chars;
   }
 
-  public StringAppender append(final CharSequence s) {
-    if (s.length() > (capacity - size)) grow(s.length());
-    for (int i = 0; i < s.length(); size++) {
-      str[size] = s.charAt(i++);
-    }
-    return this;
+  @Override
+	public String toString() {
+		return sb.toString();
   }
 
-  public StringAppender append(final String s) {
-    if (s == null) return this;
-
-    final int len = s.length();
-    if (len > (capacity - size)) {
-      grow(len);
-    }
-
-    s.getChars(0, len, str, size);
-    size += len;
-
-    return this;
-  }
-
-  public StringAppender append(final char c) {
-    if (size >= capacity) grow(size);
-    str[size++] = c;
-    return this;
-  }
-
-  public StringAppender append(final byte b) {
-    if (btr == null)
-      btr = new byte[capacity = DEFAULT_SIZE];
-    if (size >= capacity)
-      growByte(size * 2);
-    btr[size++] = b;
-    return this;
-  }
-
-
-  public int length() {
-    return size;
-  }
-
-  private void grow(final int s) {
-    if (capacity == 0) capacity = DEFAULT_SIZE;
-    final char[] newArray = new char[capacity += s * 2];
-    arraycopy(str, 0, newArray, 0, size);
-    str = newArray;
-  }
-
-  private void growByte(final int s) {
-    final byte[] newByteArray = new byte[capacity += s];
-    arraycopy(btr, 0, newByteArray, 0, size);
-    btr = newByteArray;
-  }
-
-  public char[] getChars(final int start, final int count) {
-    char[] chars = new char[count];
-    arraycopy(str, start, chars, 0, count);
-    return chars;
-  }
-
-  public char[] toChars() {
-    if (btr != null) {
-      if (encoding == null)
-        encoding = System.getProperty("file.encoding");
-      String s;
-      try {
-        s = new String(btr, encoding);
-      }
-      catch (UnsupportedEncodingException e) {
-        s = new String(btr);
-      }
-      return s.toCharArray();
-    }
-    final char[] chars = new char[size];
-    arraycopy(str, 0, chars, 0, size);
-    return chars;
-  }
-
-  public String toString() {
-    if (btr != null) {
-      if (encoding == null)
-        encoding = System.getProperty("file.encoding");
-      String s;
-      try {
-        s = new String(btr, 0, size, encoding);
-      }
-      catch (UnsupportedEncodingException e) {
-        s = new String(btr, 0, size);
-      }
-      return s;
-    }
-    if (size == capacity) return new String(str);
-    else return new String(str, 0, size);
-  }
-
-  public void getChars(int start, int count, char[] target, int offset) {
-    int delta = offset;
-    for (int i = start; i < count; i++) {
-      target[delta++] = str[i];
-    }
+  @SuppressWarnings("Since15")
+	public void getChars (int start, int end, char[] target, int offset) {
+    sb.getChars(start, end, target, offset);
   }
 
   public void reset() {
-    size = 0;
+    sb.setLength(0);
   }
 
-  public char charAt(int index) {
-    return str[index];
+  @Override public char charAt (int index){ return sb.charAt(index); }
+
+  public CharSequence substring (int start, int end) {
+    return sb.substring(start, end);
   }
 
-  public CharSequence substring(int start, int end) {
-    return new String(str, start, (end - start));
-  }
-
-  public CharSequence subSequence(int start, int end) {
-    return substring(start, end);
+  @Override
+	public CharSequence subSequence(int start, int end) {
+    return sb.subSequence(start, end);
   }
 }
-

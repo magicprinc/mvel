@@ -2,14 +2,13 @@ package org.mvel2.util;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mvel2.util.StringAppender;
 
 public class StringAppenderTest {
 
   @Test
   public void testCharConstructor() {
     final StringAppender stringAppender = new StringAppender('a');
-    Assert.assertEquals("", stringAppender.toString());
+    Assert.assertEquals("a", stringAppender.toString());
     // This looks to be exhibiting a potential bug, shouldn't this return "a"?
   }
 
@@ -29,13 +28,13 @@ public class StringAppenderTest {
     Assert.assertEquals("abc", stringAppender.toString());
   }
 
-  @Test
-  public void testAppendByteArrSubSequence() {
-    final StringAppender stringAppender = new StringAppender("a");
-    stringAppender.append("bcd".getBytes(), 1, 2);
-    stringAppender.append("e".getBytes(), 1, 0);
-    Assert.assertEquals("acd", stringAppender.toString());
-  }
+//  @Test
+//  public void testAppendByteArrSubSequence() {
+//    var stringAppender = new StringAppender("a");
+//    stringAppender.append("bcd".getBytes(), 1, 2);
+//    stringAppender.append("e".getBytes(), 1, 0);
+//    Assert.assertEquals("acd", stringAppender.toString());
+//  }
 
   @Test
   public void testAppendCharArrSubSequence() {
@@ -47,13 +46,16 @@ public class StringAppenderTest {
 
   @Test
   public void testGetChars() {
-    final StringAppender stringAppender = new StringAppender(new StringBuffer("abc"));
-    Assert.assertArrayEquals(new char[] { 'a', 'b', 'c' }, stringAppender.getChars(0, 3));
+    var stringAppender = new StringAppender(new StringBuffer("abc"));
+    //Assert.assertArrayEquals(new char[] { 'a', 'b', 'c' }, stringAppender.getChars(0, 3));
+		char[] x = new char[4];
+		stringAppender.getChars(0, 3, x, 1);
+		Assert.assertArrayEquals(new char[]{'\0', 'a', 'b', 'c' }, x);
   }
 
   @Test
   public void testGetCharsSubSequence() {
-    final StringAppender stringAppender = new StringAppender(new StringBuffer("abcdef"));
+    var stringAppender = new StringAppender(new StringBuffer("abcdef"));
     final char[] target = { 'g', 'h', 'i' };
     stringAppender.getChars(1, 2, target, 1);
     Assert.assertArrayEquals(new char[] { 'g', 'b', 'i' }, target);
@@ -65,14 +67,14 @@ public class StringAppenderTest {
     Assert.assertEquals('b', stringAppender.charAt(1));
   }
 
-  @Test
-  public void testToCharsUnsupportedEncoding() {
-    final StringAppender stringAppender = new StringAppender(0, "invalid");
-    stringAppender.append("a".getBytes()[0]);
-    final char[] expected = new char[15];
-    expected[0] = 'a';
-    Assert.assertArrayEquals(expected, stringAppender.toChars());
-  }
+//  @Test
+//  public void testToCharsUnsupportedEncoding() {
+//    var stringAppender = new StringAppender(0, "invalid");
+//    stringAppender.append("a".getBytes()[0]);
+//    final char[] expected = new char[15];
+//    expected[0] = 'a';
+//    Assert.assertArrayEquals(expected, stringAppender.toChars());
+//  }
 
   @Test
   public void testToString() {
@@ -81,12 +83,12 @@ public class StringAppenderTest {
     Assert.assertEquals("a", stringAppender.toString());
   }
 
-  @Test
-  public void testToStringUnsupportedEncoding() {
-    final StringAppender stringAppender = new StringAppender(0, "invalid");
-    stringAppender.append("a".getBytes()[0]);
-    Assert.assertEquals("a", stringAppender.toString());
-  }
+//  @Test
+//  public void testToStringUnsupportedEncoding() {
+//    var stringAppender = new StringAppender(0, "invalid");
+//    stringAppender.append("a".getBytes()[0]);
+//    Assert.assertEquals("a", stringAppender.toString());
+//  }
 
   @Test
   public void testReset() {
@@ -101,4 +103,19 @@ public class StringAppenderTest {
     final StringAppender stringAppender = new StringAppender("abcd");
     Assert.assertEquals("bc", stringAppender.subSequence(1, 3));
   }
+
+	@Test
+	public void testBasic () {
+		var b = new StringAppender("123");
+		b.append((byte)'x');
+		b.append('y');
+		b.append("---");
+		b.append("<A>".toCharArray());
+		b.append("ABCDEF".toCharArray(), 2, 3);
+		Assert.assertEquals("123xy---<A>CDE", b.toString());
+		Assert.assertArrayEquals(b.toString().toCharArray(), b.toChars());
+
+		Assert.assertEquals(b.substring(1, 3), b.subSequence(1, 3));
+		Assert.assertEquals("23x", b.subSequence(1, 4));
+	}
 }
