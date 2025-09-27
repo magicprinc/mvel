@@ -1,4 +1,6 @@
 # MVEL
+[![](https://jitpack.io/v/magicprinc/mvel.svg)](https://jitpack.io/#magicprinc/mvel)
+
 MVFLEX Expression Language (MVEL) is a hybrid dynamic/statically typed, embeddable Expression Language and runtime for the Java Platform.
 
 ## Document

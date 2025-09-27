@@ -21,8 +21,9 @@ package org.mvel2.templates;
 import java.util.Iterator;
 import java.util.Set;
 
-public interface TemplateRegistry {
-  Iterator iterator();
+public interface TemplateRegistry extends Iterable<String>{
+  @Override
+	Iterator<String> iterator();
 
   Set<String> getNames();
 
