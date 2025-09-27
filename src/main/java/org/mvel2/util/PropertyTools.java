@@ -18,15 +18,15 @@
 
 package org.mvel2.util;
 
+import org.mvel2.ParserContext;
+import org.mvel2.compiler.PropertyVerifier;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.mvel2.ParserContext;
-import org.mvel2.compiler.PropertyVerifier;
 
 import static java.lang.String.valueOf;
 import static java.lang.reflect.Modifier.PUBLIC;
@@ -36,20 +36,21 @@ import static org.mvel2.DataConversion.canConvert;
 import static org.mvel2.util.ParseTools.boxPrimitive;
 
 public class PropertyTools {
-  public static boolean isEmpty(Object o) {
-    if (o != null) {
-      if (o instanceof Object[]) {
-        return ((Object[]) o).length == 0 ||
-            (((Object[]) o).length == 1 && isEmpty(((Object[]) o)[0]));
-      }
-      else {
-        return ("".equals(valueOf(o)))
-            || "null".equals(valueOf(o))
-            || (o instanceof Collection && ((Collection) o).size() == 0)
-            || (o instanceof Map && ((Map) o).size() == 0);
-      }
-    }
-    return true;
+
+  public static boolean isEmpty (Object o) {
+		if (o instanceof Object[] a){
+			return a.length == 0 ||
+					(a.length == 1 && (a == a[0] || isEmpty(a[0])));
+		} else if (o instanceof Collection<?> c){
+			return c.isEmpty();
+		} else if (o instanceof Map<?,?> m){
+			return m.isEmpty();
+		} else if (o == null){
+			return true;
+		}
+		String s = valueOf(o);
+		return ("".equals(s))
+					|| "null".equals(s);
   }
 
   public static Method getSetter(Class clazz, String property) {
@@ -208,13 +209,13 @@ public class PropertyTools {
       return (char) 0;
     }
     else if (type == double.class) {
-      return 0d;
+      return 0.0d;
     }
     else if (type == long.class) {
-      return 0l;
+      return 0L;
     }
     else if (type == float.class) {
-      return 0f;
+      return 0.0f;
     }
     else if (type == short.class) {
       return (short) 0;
