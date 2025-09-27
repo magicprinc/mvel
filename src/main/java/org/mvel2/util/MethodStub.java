@@ -33,26 +33,40 @@ public final class MethodStub implements StaticStub {
     this.name = method.getName();
   }
 
-  public MethodStub (Class classReference, String methodName) {
+  public MethodStub (Class<?> classReference, String methodName) {
     this.classReference = classReference;
     this.name = methodName;
-		for (Method method : classReference.getMethods()){
-			if (name.equals(method.getName())){
-				this.method = method;
-				this.method.trySetAccessible();
-				break;
-			}
-		}
   }
 
   public Class<?> getClassReference(){ return classReference; }
 
   public String getMethodName (){ return name; }
 
-  public Method getMethod (){ return method; }
+  public Method getMethod () {
+		if (method != null)
+				return method;
+
+		for (Method m : classReference.getMethods()){
+			if (name.equals(m.getName())){
+				method = m;
+				method.trySetAccessible();
+				return method;
+			}
+		}
+
+		for (Method m : classReference.getDeclaredMethods()){
+			if (name.equals(m.getName())){
+				method = m;
+				method.trySetAccessible();
+				return method;
+			}
+		}
+
+		return null;
+	}
 
   @Override
 	public Object call(Object ctx, Object thisCtx, VariableResolverFactory factory, Object[] parameters) throws IllegalAccessException, InvocationTargetException {
-    return method.invoke(ctx, parameters);
+    return getMethod().invoke(ctx, parameters);
   }
 }
