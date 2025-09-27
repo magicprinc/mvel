@@ -42,4 +42,11 @@ public final class ArrayTools {
 	public static boolean isEmpty (Collection<?> c) {
 		return c == null || c.isEmpty();
 	}
+
+	public static char[] toCharArray (StringBuilder sb) {
+		int len = sb.length();
+		var chars = new char[len];
+		sb.getChars(0, len, chars, 0);
+		return chars;
+	}
 }
