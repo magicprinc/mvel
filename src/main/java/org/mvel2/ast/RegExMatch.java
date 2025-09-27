@@ -81,7 +81,8 @@ public class RegExMatch extends ASTNode {
     }
   }
 
-  public Class getEgressType() {
+  @Override
+	public Class getEgressType() {
     return Boolean.class;
   }
 

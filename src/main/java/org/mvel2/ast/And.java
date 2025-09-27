@@ -59,9 +59,8 @@ public class And extends BooleanNode {
     return n.right;
   }
 
-  public Class getEgressType() {
+  @Override
+	public Class getEgressType() {
     return Boolean.class;
   }
 }
-
-

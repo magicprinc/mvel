@@ -32,11 +32,14 @@ import java.io.Serializable;
 import static java.lang.Thread.currentThread;
 import static org.mvel2.Operator.NOOP;
 import static org.mvel2.PropertyAccessor.get;
-import static org.mvel2.optimizers.OptimizerFactory.*;
+import static org.mvel2.optimizers.OptimizerFactory.SAFE_REFLECTIVE;
+import static org.mvel2.optimizers.OptimizerFactory.getAccessorCompiler;
+import static org.mvel2.optimizers.OptimizerFactory.getDefaultAccessorCompiler;
 import static org.mvel2.util.CompilerTools.getInjectedImports;
-import static org.mvel2.util.ParseTools.*;
+import static org.mvel2.util.ParseTools.handleNumericConversion;
+import static org.mvel2.util.ParseTools.isNumber;
+import static org.mvel2.util.ParseTools.subArray;
 
-@SuppressWarnings({"ManualArrayCopy", "CaughtExceptionImmediatelyRethrown"})
 public class ASTNode implements Cloneable, Serializable {
   public static final int LITERAL = 1;
   public static final int DEEP_PROPERTY = 1 << 1;
@@ -252,7 +255,6 @@ public class ASTNode implements Cloneable, Serializable {
     this.fields |= LITERAL;
   }
 
-  @SuppressWarnings({"SuspiciousMethodCalls"})
   protected void setName(char[] name) {
     if (isNumber(name, start, offset)) {
       egressType = (literal = handleNumericConversion(name, start, offset)).getClass();
@@ -261,7 +263,7 @@ public class ASTNode implements Cloneable, Serializable {
           literal = ~((Integer) literal);
         }
         catch (ClassCastException e) {
-          throw new CompileException("bitwise (~) operator can only be applied to integers", expr, start);
+          throw new CompileException("bitwise (~) operator can only be applied to integers", expr, start, e);
         }
       }
       return;
@@ -422,7 +424,8 @@ public class ASTNode implements Cloneable, Serializable {
     setName(expr);
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     return isOperator() ? "<<" + DebugTools.getOperatorName(getOperator()) + ">>" :
         (PCTX_STORED & fields) != 0 ? nameCache : new String(expr, start, offset);
   }
@@ -431,5 +434,3 @@ public class ASTNode implements Cloneable, Serializable {
     return pCtx != null ? pCtx.getClassLoader() : currentThread().getContextClassLoader();
   }
 }
-
-

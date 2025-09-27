@@ -59,7 +59,8 @@ public class Or extends BooleanNode {
     return "(" + left.toString() + " || " + right.toString() + ")";
   }
 
-  public Class getEgressType() {
+  @Override
+	public Class getEgressType() {
     return Boolean.class;
   }
 }

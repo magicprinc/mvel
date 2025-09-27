@@ -128,18 +128,18 @@ public class CommentParsingTests extends AbstractTest {
   }
 
   public void testMultiLineCommentInList() {
-    assertEquals(Arrays.asList(new Integer[]{10, 20}),
-        test("import " + Foo.class.getName() + ";\n [ 10, 20 /* ... */ ]"));
+    assertEquals(Arrays.asList(10, 20),
+    test("import " + Foo.class.getName() + ";\n [ 10, 20 /* ... */ ]"));
 
-//    assertEquals(Arrays.asList(new Integer[]{10, 20}),
-//        test("import " + Foo.class.getName() + ";\n [ 10, 20           ]"));
+    assertEquals(Arrays.asList(new Integer[]{10, 20}),
+    test("import " + Foo.class.getName() + ";\n [ 10, 20           ]"));
   }
 
   public void testInExpressionComment() {
 
     Serializable s1 = MVEL.compileExpression("new String /*XXX*/(\"foo\")",
 
-        ParserContext.create().stronglyTyped());
+    ParserContext.create().stronglyTyped());
 
     MVEL.executeExpression(s1);
 

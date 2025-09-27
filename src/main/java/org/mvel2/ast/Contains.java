@@ -41,7 +41,8 @@ public class Contains extends ASTNode {
     throw new RuntimeException("operation not supported");
   }
 
-  public Class getEgressType() {
+  @Override
+	public Class getEgressType() {
     return Boolean.class;
   }
 

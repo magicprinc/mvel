@@ -33,7 +33,8 @@ public class Instance extends ASTNode {
 
   }
 
-  public Class getEgressType() {
+  @Override
+	public Class getEgressType() {
     return Boolean.class;
   }
 

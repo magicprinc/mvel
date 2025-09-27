@@ -44,7 +44,8 @@ public class RegExMatchNode extends ASTNode {
         .matcher(valueOf(eval(expr, node.start, node.offset, ctx, factory))).matches();
   }
 
-  public Class getEgressType() {
+  @Override
+	public Class getEgressType() {
     return Boolean.class;
   }
 }

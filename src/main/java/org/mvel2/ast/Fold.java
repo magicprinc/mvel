@@ -30,7 +30,9 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.mvel2.util.CompilerTools.expectType;
-import static org.mvel2.util.ParseTools.*;
+import static org.mvel2.util.ParseTools.isJunct;
+import static org.mvel2.util.ParseTools.isWhitespace;
+import static org.mvel2.util.ParseTools.subCompileExpression;
 
 public class Fold extends ASTNode {
   private ExecutableStatement subEx;
@@ -141,7 +143,8 @@ public class Fold extends ASTNode {
     return list;
   }
 
-  public Class getEgressType() {
+  @Override
+	public Class getEgressType() {
     return Collection.class;
   }
 }
