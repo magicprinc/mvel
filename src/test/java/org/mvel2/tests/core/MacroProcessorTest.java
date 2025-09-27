@@ -98,14 +98,16 @@ public class MacroProcessorTest extends BaseMvelTestCase {
     Map<String, Macro> macros = new HashMap<String, Macro>();
 
     interceptors.put("Modify", new Interceptor() {
-      public int doBefore(ASTNode node, VariableResolverFactory factory) {
+      @Override
+			public int doBefore(ASTNode node, VariableResolverFactory factory) {
         ((WithNode) node).getNestedStatement().getValue(null,
             factory);
         factory.createVariable("mod", "FOOBAR!");
         return 0;
       }
 
-      public int doAfter(Object val, ASTNode node, VariableResolverFactory factory) {
+      @Override
+			public int doAfter(Object val, ASTNode node, VariableResolverFactory factory) {
         return 0;
       }
     });
@@ -157,7 +159,8 @@ public class MacroProcessorTest extends BaseMvelTestCase {
     Map<String, Macro> macros = new HashMap<String, Macro>();
 
     interceptors.put("Modify", new Interceptor() {
-      public int doBefore(ASTNode node, VariableResolverFactory factory) {
+      @Override
+			public int doBefore(ASTNode node, VariableResolverFactory factory) {
         ((WithNode) node).getNestedStatement().getValue(null,
             factory);
 
@@ -167,7 +170,8 @@ public class MacroProcessorTest extends BaseMvelTestCase {
         return 0;
       }
 
-      public int doAfter(Object val, ASTNode node, VariableResolverFactory factory) {
+      @Override
+			public int doAfter(Object val, ASTNode node, VariableResolverFactory factory) {
         return 0;
       }
     });

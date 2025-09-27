@@ -1,12 +1,5 @@
 package org.mvel2.tests.core;
 
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.mvel2.MVEL;
 import org.mvel2.PropertyAccessor;
 import org.mvel2.integration.GlobalListenerFactory;
@@ -22,6 +15,13 @@ import org.mvel2.tests.core.res.Base;
 import org.mvel2.tests.core.res.Foo;
 import org.objectweb.asm.MethodVisitor;
 
+import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static org.objectweb.asm.Opcodes.ACONST_NULL;
 import static org.objectweb.asm.Opcodes.CHECKCAST;
 import static org.objectweb.asm.Opcodes.ICONST_0;
@@ -33,7 +33,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
   Base base = new Base();
 
   public class TestPropertyHandler implements PropertyHandler, ProducesBytecode {
-    public Object getProperty(String name, Object contextObj,
+    @Override
+		public Object getProperty(String name, Object contextObj,
                               VariableResolverFactory variableFactory) {
       assertNotNull(contextObj);
       assertEquals("0", name);
@@ -41,7 +42,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
       return "gotcalled";
     }
 
-    public Object setProperty(String name, Object contextObj,
+    @Override
+		public Object setProperty(String name, Object contextObj,
                               VariableResolverFactory variableFactory, Object value) {
       assertNotNull(contextObj);
       assertEquals("0", name);
@@ -120,7 +122,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
     final String[] res = new String[1];
 
     GlobalListenerFactory.registerGetListener(new Listener() {
-      public void onEvent(Object context, String contextName, VariableResolverFactory variableFactory, Object value) {
+      @Override
+			public void onEvent(Object context, String contextName, VariableResolverFactory variableFactory, Object value) {
         System.out.println("Listener Fired:" + contextName);
         res[0] = contextName;
       }
@@ -144,11 +147,13 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
     OptimizerFactory.setDefaultOptimizer("ASM");
 
     PropertyHandlerFactory.setNullPropertyHandler(new PropertyHandler() {
-      public Object getProperty(String name, Object contextObj, VariableResolverFactory variableFactory) {
+      @Override
+			public Object getProperty(String name, Object contextObj, VariableResolverFactory variableFactory) {
         return "NULL";
       }
 
-      public Object setProperty(String name, Object contextObj, VariableResolverFactory variableFactory, Object value) {
+      @Override
+			public Object setProperty(String name, Object contextObj, VariableResolverFactory variableFactory, Object value) {
         return "NULL";
       }
     });
@@ -174,11 +179,13 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
     OptimizerFactory.setDefaultOptimizer("reflective");
 
     PropertyHandlerFactory.setNullPropertyHandler(new PropertyHandler() {
-      public Object getProperty(String name, Object contextObj, VariableResolverFactory variableFactory) {
+      @Override
+			public Object getProperty(String name, Object contextObj, VariableResolverFactory variableFactory) {
         return "NULL";
       }
 
-      public Object setProperty(String name, Object contextObj, VariableResolverFactory variableFactory, Object value) {
+      @Override
+			public Object setProperty(String name, Object contextObj, VariableResolverFactory variableFactory, Object value) {
         return "NULL";
       }
     });
@@ -204,7 +211,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
 
     PropertyHandlerFactory.registerPropertyHandler(Map.class, new
         PropertyHandler() {
-          public Object getProperty(String name, Object contextObj,
+          @Override
+					public Object getProperty(String name, Object contextObj,
                                     VariableResolverFactory variableFactory) {
             assertNotNull(contextObj);
             assertEquals("'key'", name);
@@ -212,7 +220,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
             return "gotcalled";
           }
 
-          public Object setProperty(String name, Object contextObj,
+          @Override
+					public Object setProperty(String name, Object contextObj,
                                     VariableResolverFactory variableFactory, Object value) {
             assertNotNull(contextObj);
             assertEquals("'key'", name);
@@ -236,7 +245,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
 
     PropertyHandlerFactory.registerPropertyHandler(Array.class, new
         PropertyHandler() {
-          public Object getProperty(String name, Object contextObj,
+          @Override
+					public Object getProperty(String name, Object contextObj,
                                     VariableResolverFactory variableFactory) {
             assertNotNull(contextObj);
             assertEquals("0", name);
@@ -244,7 +254,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
             return "gotcalled";
           }
 
-          public Object setProperty(String name, Object contextObj,
+          @Override
+					public Object setProperty(String name, Object contextObj,
                                     VariableResolverFactory variableFactory, Object value) {
             assertNotNull(contextObj);
             assertEquals("0", name);
@@ -268,7 +279,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
     class MyListener implements Listener {
       public int counter;
 
-      public void onEvent(Object context, String contextName,
+      @Override
+			public void onEvent(Object context, String contextName,
                           VariableResolverFactory variableFactory, Object value) {
         counter++;
       }
@@ -294,7 +306,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
     class MyListener implements Listener {
       public int count;
 
-      public void onEvent(Object context, String contextName,
+      @Override
+			public void onEvent(Object context, String contextName,
                           VariableResolverFactory variableFactory, Object value) {
         count++;
       }
@@ -304,14 +317,16 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
     GlobalListenerFactory.registerGetListener(listener);
 
     PropertyHandlerFactory.setNullPropertyHandler(new PropertyHandler() {
-      public Object getProperty(String name, Object contextObj,
+      @Override
+			public Object getProperty(String name, Object contextObj,
                                 VariableResolverFactory variableFactory) {
         List someList = new ArrayList();
         someList.add(new Foo());
         return someList;
       }
 
-      public Object setProperty(String name, Object contextObj,
+      @Override
+			public Object setProperty(String name, Object contextObj,
                                 VariableResolverFactory variableFactory, Object value) {
         return null;
       }
@@ -319,7 +334,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
 
     PropertyHandlerFactory.registerPropertyHandler(List.class, new
         PropertyHandler() {
-          public Object getProperty(String name, Object contextObj,
+          @Override
+					public Object getProperty(String name, Object contextObj,
                                     VariableResolverFactory variableFactory) {
             List list = (List) contextObj;
             int index = Integer.valueOf(name);
@@ -330,7 +346,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
             return list.get(index);
           }
 
-          public Object setProperty(String name, Object contextObj,
+          @Override
+					public Object setProperty(String name, Object contextObj,
                                     VariableResolverFactory variableFactory, Object value) {
             return null;
           }
@@ -366,7 +383,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
 
   public class WebPropertyHandler implements PropertyHandler {
 
-    public Object getProperty(String arg0, Object arg1,
+    @Override
+		public Object getProperty(String arg0, Object arg1,
                               VariableResolverFactory arg2) {
       WorkObject wob = (WorkObject) arg1;
       if (wob.hasFieldName(arg0)) {
@@ -376,7 +394,8 @@ public class PropertyHandlerTests extends BaseMvelTestCase {
         return null;
     }
 
-    public Object setProperty(String arg0, Object arg1,
+    @Override
+		public Object setProperty(String arg0, Object arg1,
                               VariableResolverFactory arg2, Object arg3) {
       WorkObject wob = (WorkObject) arg1;
       wob.setFieldValue(arg0, arg3, true);

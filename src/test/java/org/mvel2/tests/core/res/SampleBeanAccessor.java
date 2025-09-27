@@ -1,20 +1,21 @@
 package org.mvel2.tests.core.res;
 
+import org.mvel2.integration.PropertyHandler;
+import org.mvel2.integration.VariableResolverFactory;
+import org.mvel2.optimizers.impl.asm.ProducesBytecode;
 import org.objectweb.asm.MethodVisitor;
 
 import static org.objectweb.asm.Opcodes.CHECKCAST;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 
-import org.mvel2.integration.PropertyHandler;
-import org.mvel2.integration.VariableResolverFactory;
-import org.mvel2.optimizers.impl.asm.ProducesBytecode;
-
 public class SampleBeanAccessor implements PropertyHandler, ProducesBytecode {
-  public Object getProperty(String name, Object contextObj, VariableResolverFactory variableFactory) {
+  @Override
+	public Object getProperty(String name, Object contextObj, VariableResolverFactory variableFactory) {
     return ((SampleBean) contextObj).getProperty(name);
   }
 
-  public Object setProperty(String name, Object contextObj, VariableResolverFactory variableFactory, Object value) {
+  @Override
+	public Object setProperty(String name, Object contextObj, VariableResolverFactory variableFactory, Object value) {
     return ((SampleBean) contextObj).setProperty(name, value);
   }
 

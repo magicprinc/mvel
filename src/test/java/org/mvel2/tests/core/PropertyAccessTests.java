@@ -349,11 +349,13 @@ public class PropertyAccessTests extends AbstractTest {
   }
 
   private static class DynaBeanPropertyHandler implements PropertyHandler {
-    public Object getProperty(String name, Object contextObj, VariableResolverFactory variableFactory) {
+    @Override
+		public Object getProperty(String name, Object contextObj, VariableResolverFactory variableFactory) {
       return ((DynaBean) contextObj).get(name);
     }
 
-    public Object setProperty(String name, Object contextObj, VariableResolverFactory variableFactory, Object value) {
+    @Override
+		public Object setProperty(String name, Object contextObj, VariableResolverFactory variableFactory, Object value) {
       ((DynaBean) contextObj).set(name, value);
       return value;
     }

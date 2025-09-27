@@ -315,7 +315,8 @@ public class DebuggerTests extends AbstractTest {
     final TestResult result = new TestResult();
 
     interceptors.put("Update", new Interceptor() {
-      public int doBefore(ASTNode node, VariableResolverFactory factory) {
+      @Override
+			public int doBefore(ASTNode node, VariableResolverFactory factory) {
         ((WithNode) node).getNestedStatement().getValue(null,
                 factory);
         System.out.println("fired update interceptor -- before");
@@ -323,7 +324,8 @@ public class DebuggerTests extends AbstractTest {
         return 0;
       }
 
-      public int doAfter(Object val, ASTNode node, VariableResolverFactory factory) {
+      @Override
+			public int doAfter(Object val, ASTNode node, VariableResolverFactory factory) {
         System.out.println("fired update interceptor -- after");
         result.firedAfter = true;
         return 0;

@@ -8,18 +8,19 @@ import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.optimizers.OptimizerFactory;
 import org.mvel2.util.SharedVariableSpaceModel;
 import org.mvel2.util.VariableSpaceCompiler;
-import org.mvel2.util.VariableSpaceModel;
 
 import java.io.Serializable;
 
 public class IntegrationTests extends AbstractTest {
   class NullPropertyHandler implements PropertyHandler {
 
-    public Object getProperty(String name, Object contextObj, VariableResolverFactory variableFactory) {
+    @Override
+		public Object getProperty(String name, Object contextObj, VariableResolverFactory variableFactory) {
       return null;
     }
 
-    public Object setProperty(String name, Object contextObj, VariableResolverFactory variableFactory, Object value) {
+    @Override
+		public Object setProperty(String name, Object contextObj, VariableResolverFactory variableFactory, Object value) {
       return null;
     }
   }

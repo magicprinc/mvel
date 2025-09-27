@@ -1,5 +1,6 @@
 package org.mvel2.integration;
 
+@FunctionalInterface
 public interface Listener {
-  public void onEvent(Object context, String contextName, VariableResolverFactory variableFactory, Object value);
+  void onEvent (Object context, String contextName, VariableResolverFactory variableFactory, Object value);
 }

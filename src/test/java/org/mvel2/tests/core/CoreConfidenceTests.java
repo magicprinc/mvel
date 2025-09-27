@@ -1,5 +1,37 @@
 package org.mvel2.tests.core;
 
+import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.mvel2.CompileException;
+import org.mvel2.DataConversion;
+import org.mvel2.MVEL;
+import org.mvel2.Macro;
+import org.mvel2.ParserConfiguration;
+import org.mvel2.ParserContext;
+import org.mvel2.PropertyAccessException;
+import org.mvel2.PropertyAccessor;
+import org.mvel2.ast.ASTNode;
+import org.mvel2.compiler.CompiledExpression;
+import org.mvel2.compiler.ExecutableStatement;
+import org.mvel2.compiler.ExpressionCompiler;
+import org.mvel2.integration.Interceptor;
+import org.mvel2.integration.PropertyHandlerFactory;
+import org.mvel2.integration.ResolverTools;
+import org.mvel2.integration.VariableResolverFactory;
+import org.mvel2.integration.impl.ClassImportResolverFactory;
+import org.mvel2.integration.impl.DefaultLocalVariableResolverFactory;
+import org.mvel2.integration.impl.IndexedVariableResolverFactory;
+import org.mvel2.integration.impl.MapVariableResolverFactory;
+import org.mvel2.optimizers.OptimizerFactory;
+import org.mvel2.tests.core.res.*;
+import org.mvel2.tests.core.res.res2.ClassProvider;
+import org.mvel2.tests.core.res.res2.Outer;
+import org.mvel2.tests.core.res.res2.OverloadedClass;
+import org.mvel2.tests.core.res.res2.PublicClass;
+import org.mvel2.util.ParseTools;
+import org.mvel2.util.ReflectionUtil;
+
 import java.awt.Dimension;
 import java.io.BufferedReader;
 import java.io.File;
@@ -29,62 +61,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import junit.framework.TestCase;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.mvel2.CompileException;
-import org.mvel2.DataConversion;
-import org.mvel2.MVEL;
-import org.mvel2.Macro;
-import org.mvel2.ParserConfiguration;
-import org.mvel2.ParserContext;
-import org.mvel2.PropertyAccessException;
-import org.mvel2.PropertyAccessor;
-import org.mvel2.ast.ASTNode;
-import org.mvel2.compiler.CompiledExpression;
-import org.mvel2.compiler.ExecutableStatement;
-import org.mvel2.compiler.ExpressionCompiler;
-import org.mvel2.integration.Interceptor;
-import org.mvel2.integration.PropertyHandlerFactory;
-import org.mvel2.integration.ResolverTools;
-import org.mvel2.integration.VariableResolverFactory;
-import org.mvel2.integration.impl.ClassImportResolverFactory;
-import org.mvel2.integration.impl.DefaultLocalVariableResolverFactory;
-import org.mvel2.integration.impl.IndexedVariableResolverFactory;
-import org.mvel2.integration.impl.MapVariableResolverFactory;
-import org.mvel2.optimizers.OptimizerFactory;
-import org.mvel2.tests.core.res.Bar;
-import org.mvel2.tests.core.res.Base;
-import org.mvel2.tests.core.res.Cheese;
-import org.mvel2.tests.core.res.Cheesery;
-import org.mvel2.tests.core.res.Column;
-import org.mvel2.tests.core.res.DefaultKnowledgeHelper;
-import org.mvel2.tests.core.res.Foo;
-import org.mvel2.tests.core.res.Grid;
-import org.mvel2.tests.core.res.KnowledgeHelper;
-import org.mvel2.tests.core.res.KnowledgeHelperFixer;
-import org.mvel2.tests.core.res.MapObject;
-import org.mvel2.tests.core.res.MyClass;
-import org.mvel2.tests.core.res.MyInterface;
-import org.mvel2.tests.core.res.OverloadedInterface;
-import org.mvel2.tests.core.res.PojoStatic;
-import org.mvel2.tests.core.res.RuleBase;
-import org.mvel2.tests.core.res.RuleBaseImpl;
-import org.mvel2.tests.core.res.SampleBean;
-import org.mvel2.tests.core.res.SampleBeanAccessor;
-import org.mvel2.tests.core.res.Ship;
-import org.mvel2.tests.core.res.Status;
-import org.mvel2.tests.core.res.TestClass;
-import org.mvel2.tests.core.res.User;
-import org.mvel2.tests.core.res.WorkingMemory;
-import org.mvel2.tests.core.res.WorkingMemoryImpl;
-import org.mvel2.tests.core.res.res2.ClassProvider;
-import org.mvel2.tests.core.res.res2.Outer;
-import org.mvel2.tests.core.res.res2.OverloadedClass;
-import org.mvel2.tests.core.res.res2.PublicClass;
-import org.mvel2.util.ParseTools;
-import org.mvel2.util.ReflectionUtil;
 
 import static java.util.Collections.unmodifiableCollection;
 import static org.mvel2.MVEL.compileExpression;
@@ -306,13 +282,15 @@ public class CoreConfidenceTests extends AbstractTest {
 
   public void testInterceptors() {
     Interceptor testInterceptor = new Interceptor() {
-      public int doBefore(ASTNode node,
+      @Override
+			public int doBefore(ASTNode node,
                           VariableResolverFactory factory) {
         System.out.println("BEFORE Node: " + node.getName());
         return 0;
       }
 
-      public int doAfter(Object val,
+      @Override
+			public int doAfter(Object val,
                          ASTNode node,
                          VariableResolverFactory factory) {
         System.out.println("AFTER Node: " + node.getName());
@@ -3570,7 +3548,7 @@ public class CoreConfidenceTests extends AbstractTest {
 
   public void testMapAccessWithNestedPropertyRepeated() {
     /*
-     * 181 - Nested property access successful in ReflectiveAccessorOptimizer 
+     * 181 - Nested property access successful in ReflectiveAccessorOptimizer
      *   but fails in ASMAccessorOptimizer
      */
     String str = "map[key] == \"one\"";
@@ -3693,7 +3671,7 @@ public class CoreConfidenceTests extends AbstractTest {
     }
     finally {
        OptimizerFactory.setDefaultOptimizer(OptimizerFactory.DYNAMIC);
-    }  
+    }
   }
 
   public void testInlineConstructor() {
@@ -4733,8 +4711,8 @@ public class CoreConfidenceTests extends AbstractTest {
     assertEquals(Object.class, MVEL.analyze("a.getSomething()", parserContext));
     assertEquals(String.class, MVEL.analyze("b.getSomething()", parserContext));
   }
-  
-  
+
+
   public void testMethodOverloadMatch() throws Exception {
 	  OverloadedClass c = new OverloadedClass();
 	  Method found  = ParseTools.getExactMatch("putXX", new Class[]{int.class, String.class}, void.class, OverloadedInterface.class);
@@ -4910,7 +4888,7 @@ public class CoreConfidenceTests extends AbstractTest {
   @Ignore("This test degraded because the fix https://github.com/mvel/mvel/commit/cf4a24f1 was reverted by https://github.com/mvel/mvel/commit/6a982e05f32 ")
   public void ignore_test_BigDecimal_ASMoptimizerSupport() {
     /* https://github.com/mvel/mvel/issues/89
-     * The following case failed in attempt from the ASM optimizer to 
+     * The following case failed in attempt from the ASM optimizer to
      *  create a numeric constant from the value 30000B.
      */
     Serializable compiled = MVEL.compileExpression("big = new java.math.BigDecimal(\"10000\"); if (big.compareTo(30000B) > 0) then ;");
@@ -4953,21 +4931,21 @@ public class CoreConfidenceTests extends AbstractTest {
     assertEquals(double.class, method.getReturnType());
     Assert.assertArrayEquals(new Class<?>[] {double.class, int.class}, method.getParameterTypes());
   }
-  
+
   public void testEmptyVarargConstructor() {
       String clsName = MySet.class.getName();
       OptimizerFactory.setDefaultOptimizer("ASM");
       Serializable s = MVEL.compileExpression("new " + clsName + "()");
       assertNotNull(MVEL.executeExpression(s));
   }
-  
+
   public void testEmptyVarargMethod() {
     OptimizerFactory.setDefaultOptimizer("ASM");
     Serializable s = MVEL.compileExpression("m.add()");
     Map<String, MySet> inputs = Collections.singletonMap("m", new MySet());
     MVEL.executeExpression(s, inputs);
   }
-  
+
   public void testForLoopWithSpaces() {
     VariableResolverFactory factory = new MapVariableResolverFactory(new HashMap<String, Object>());
     factory.createVariable("strings", Arrays.asList( "test" ));
@@ -4986,7 +4964,7 @@ public class CoreConfidenceTests extends AbstractTest {
     Serializable compiledExpr = MVEL.compileExpression(expression, pctx);
     assertEquals( "test", MVEL.executeExpression(compiledExpr, null, factory));
   }
-  
+
   public void testLooseTypeConversion() {
      int [] result = MVEL.eval("3.0", int [].class);
      assertEquals(3, result[0]);

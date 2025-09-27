@@ -24,7 +24,7 @@ import static java.nio.charset.StandardCharsets.*;
  *
  * @author Mike Brock
  */
-public class StringAppender implements CharSequence {
+public final class StringAppender implements CharSequence {
 	final StringBuilder sb;
 
   public StringAppender() {
@@ -92,16 +92,10 @@ public class StringAppender implements CharSequence {
   @Override public int length (){ return sb.length(); }
 
   public char[] toChars () {
-		int len = sb.length();
-		var chars = new char[len];
-		sb.getChars(0, len, chars, 0);
-		return chars;
+		return ArrayTools.toCharArray(sb);
   }
 
-  @Override
-	public String toString() {
-		return sb.toString();
-  }
+  @Override public String toString (){ return sb.toString(); }
 
   @SuppressWarnings("Since15")
 	public void getChars (int start, int end, char[] target, int offset) {
