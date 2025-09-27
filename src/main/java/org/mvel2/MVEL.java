@@ -14,14 +14,6 @@
  */
 package org.mvel2;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.mvel2.compiler.CompiledAccExpression;
 import org.mvel2.compiler.CompiledExpression;
 import org.mvel2.compiler.ExecutableStatement;
@@ -35,9 +27,16 @@ import org.mvel2.integration.impl.ImmutableDefaultFactory;
 import org.mvel2.integration.impl.MapVariableResolverFactory;
 import org.mvel2.optimizers.impl.refl.nodes.GetterAccessor;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.Map;
+
 import static java.lang.Boolean.getBoolean;
 import static java.lang.String.valueOf;
-
 import static org.mvel2.DataConversion.convert;
 import static org.mvel2.MVELRuntime.execute;
 import static org.mvel2.util.ParseTools.loadFromFile;
@@ -1124,7 +1123,7 @@ public class MVEL {
       return m;
     }
     catch (NoSuchMethodException e) {
-      throw new RuntimeException("no such method: " + methodName);
+      throw new RuntimeException("no such method: " + methodName, e);
     }
   }
 }
