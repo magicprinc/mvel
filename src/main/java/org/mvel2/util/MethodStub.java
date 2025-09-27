@@ -20,53 +20,39 @@ package org.mvel2.util;
 
 import org.mvel2.integration.VariableResolverFactory;
 
-import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public class MethodStub implements StaticStub {
-  private Class classReference;
-  private String name;
-
+public final class MethodStub implements StaticStub {
+  private final Class<?> classReference;
+  private final String name;
   private transient Method method;
 
-  public MethodStub(Method method) {
+  public MethodStub (Method method) {
     this.classReference = method.getDeclaringClass();
     this.name = method.getName();
   }
 
-  public MethodStub(Class classReference, String methodName) {
+  public MethodStub (Class classReference, String methodName) {
     this.classReference = classReference;
     this.name = methodName;
+		for (Method method : classReference.getMethods()){
+			if (name.equals(method.getName())){
+				this.method = method;
+				this.method.trySetAccessible();
+				break;
+			}
+		}
   }
 
-  public Class getClassReference() {
-    return classReference;
-  }
+  public Class<?> getClassReference(){ return classReference; }
 
-  public void setClassReference(Class classReference) {
-    this.classReference = classReference;
-  }
+  public String getMethodName (){ return name; }
 
-  public String getMethodName() {
-    return name;
-  }
+  public Method getMethod (){ return method; }
 
-  public void setMethodName(String methodName) {
-    this.name = methodName;
-  }
-
-  public Method getMethod() {
-    if (method == null) {
-      for (Method method : classReference.getMethods()) {
-        if (name.equals(method.getName())) return this.method = method;
-      }
-    }
-    return method;
-  }
-
-  public Object call(Object ctx, Object thisCtx, VariableResolverFactory factory, Object[] parameters)
-      throws IllegalAccessException, InvocationTargetException {
+  @Override
+	public Object call(Object ctx, Object thisCtx, VariableResolverFactory factory, Object[] parameters) throws IllegalAccessException, InvocationTargetException {
     return method.invoke(ctx, parameters);
   }
 }
