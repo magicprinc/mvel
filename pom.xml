@@ -5,7 +5,7 @@
 	<groupId>org.mvel</groupId>
 	<artifactId>mvel2</artifactId>
 	<packaging>jar</packaging>
-	<version>2.5.4</version>
+	<version>2.6.0</version>
 
 	<name>mvel</name>
 	<url>https://github.com/mvel/mvel</url>
@@ -161,7 +161,7 @@
 				<configuration>
 					<runOrder>random</runOrder>
 					<childDelegation>true</childDelegation>
-					<systemProperties>
+					<systemPropertyVariables>
 						<property>
 							<name>mvel.disable.jit</name>
 							<value>true</value>
@@ -174,7 +174,7 @@
 							<name>mvel.tests.quick</name>
 							<value>true</value>
 						</property>
-					</systemProperties>
+					</systemPropertyVariables>
 					<includes>
 						<include>**/*Test.java</include>
 						<include>**/*Tests.java</include>
