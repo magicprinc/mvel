@@ -27,12 +27,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.HexFormat;
 
 import static java.nio.charset.StandardCharsets.*;
 import static org.mvel2.util.ParseTools.balancedCapture;
 
-public class TemplateTools {
+public final class TemplateTools {
 
   public static Node getLastNode(Node node) {
     Node n = node;
@@ -105,6 +106,14 @@ public class TemplateTools {
 
 			log.log(System.Logger.Level.ERROR, "asStr: failed to convert byte[] to UTF-8 str: (%s) %s", b.length, HexFormat.of().formatHex(b));
 			return new String(b, 0/*hiByte*/);// fallback to Latin1
+		}
+	}
+
+	public static Appendable append (Appendable to, Object data) throws UncheckedIOException {
+		try {
+			return to.append(String.valueOf(data));
+		} catch (IOException e){
+			throw new UncheckedIOException("failed to write to Appendable: "+ to +", data: "+ data, e);
 		}
 	}
 }
