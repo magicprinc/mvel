@@ -18,12 +18,12 @@
 
 package org.mvel2.util;
 
-import org.mvel2.integration.VariableResolverFactory;
+import org.jspecify.annotations.Nullable;
 
-import java.lang.reflect.InvocationTargetException;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 
-public final class MethodStub implements StaticStub {
+public final class MethodStub implements Serializable /*StaticStub*/ {
   private final Class<?> classReference;
   private final String name;
   private transient Method method;
@@ -38,11 +38,11 @@ public final class MethodStub implements StaticStub {
     this.name = methodName;
   }
 
-  public Class<?> getClassReference(){ return classReference; }
+  public Class<?> getClassReference (){ return classReference; }
 
   public String getMethodName (){ return name; }
 
-  public Method getMethod () {
+  public @Nullable Method getMethod () {
 		if (method != null)
 				return method;
 
@@ -64,9 +64,7 @@ public final class MethodStub implements StaticStub {
 
 		return null;
 	}
-
-  @Override
-	public Object call(Object ctx, Object thisCtx, VariableResolverFactory factory, Object[] parameters) throws IllegalAccessException, InvocationTargetException {
-    return getMethod().invoke(ctx, parameters);
-  }
+//	public Object call (Object ctx, Object thisCtx, VariableResolverFactory factory, Object[] parameters) throws IllegalAccessException, InvocationTargetException {
+//    return getMethod().invoke(ctx, parameters);
+//  }
 }
