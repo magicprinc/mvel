@@ -1807,8 +1807,8 @@ public class AbstractParser implements Parser, Serializable {
    * Capture from the current cursor position, to the end of the statement.
    */
   protected void captureToEOS() {
-    while (cursor != end) {
-      switch (expr[cursor]) {
+    while (cursor < end){
+      switch (expr[cursor]){
         case '(':
         case '[':
         case '{':
@@ -1834,9 +1834,8 @@ public class AbstractParser implements Parser, Serializable {
    * From the current cursor position, capture to the end of statement, or the end of line, whichever comes first.
    */
   protected void captureToEOSorEOL() {
-    while (cursor != end && (expr[cursor] != '\n' && expr[cursor] != '\r' && expr[cursor] != ';')) {
-      cursor++;
-    }
+    while (cursor < end && (expr[cursor] != '\n' && expr[cursor] != '\r' && expr[cursor] != ';'))
+      	cursor++;
   }
 
   /**
@@ -1952,7 +1951,7 @@ public class AbstractParser implements Parser, Serializable {
    * @return -
    */
   protected int trimRight(int pos) {
-    while (pos != end && isWhitespace(expr[pos])) pos++;
+    while (pos < end && isWhitespace(expr[pos])) pos++;
     return pos;
   }
 
@@ -2075,10 +2074,9 @@ public class AbstractParser implements Parser, Serializable {
    * @param expression the expression
    */
   protected void setExpression (char[] expression) {
-    length = (this.expr = expression).length;
+    end = length = (this.expr = expression).length;
     while (start < length && isWhitespace(expr[start])) start++;
     while (length > start && isWhitespace(this.expr[length - 1])) length--;
-		end = length;
   }
 
   /**
