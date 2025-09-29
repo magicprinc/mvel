@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.mvel2.templates.res;
 
 import org.jspecify.annotations.Nullable;
@@ -60,7 +59,7 @@ public abstract class Node implements Serializable {
     this.next = next;
   }
 
-  public abstract Object eval(TemplateRuntime runtime, Appendable appender, @Nullable Object ctx, @Nullable VariableResolverFactory factory);
+  public abstract Object eval (TemplateRuntime runtime, Appendable appender, @Nullable Object ctx, @Nullable VariableResolverFactory factory);
 
   public String getName() {
     return name;
