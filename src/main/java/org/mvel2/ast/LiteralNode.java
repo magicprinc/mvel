@@ -49,15 +49,18 @@ public class LiteralNode extends ASTNode {
     return literal;
   }
 
-  public Object getLiteralValue() {
+  @Override
+	public Object getLiteralValue() {
     return literal;
   }
 
-  public void setLiteralValue(Object literal) {
+  @Override
+	public void setLiteralValue(Object literal) {
     this.literal = literal;
   }
 
-  public boolean isLiteral() {
+  @Override
+	public boolean isLiteral() {
     return true;
   }
 

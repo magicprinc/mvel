@@ -18,6 +18,8 @@
 
 package org.mvel2.integration;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.Serializable;
 import java.util.Set;
 
@@ -35,7 +37,7 @@ public interface VariableResolverFactory extends Serializable {
    * @param value - value of the variable
    * @return instance of the variable resolver associated with the variable
    */
-  public VariableResolver createVariable(String name, Object value);
+  public VariableResolver createVariable(String name, @Nullable Object value);
 
   public VariableResolver createIndexedVariable(int index, String name, Object value);
 

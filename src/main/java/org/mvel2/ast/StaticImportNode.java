@@ -18,13 +18,13 @@
 
 package org.mvel2.ast;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.CompileException;
 import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 
 import java.lang.reflect.Method;
 
-import static java.lang.Thread.currentThread;
 import static java.lang.reflect.Modifier.isStatic;
 import static org.mvel2.util.ArrayTools.findLast;
 
@@ -32,9 +32,9 @@ import static org.mvel2.util.ArrayTools.findLast;
  * @author Christopher Brock
  */
 public class StaticImportNode extends ASTNode {
-  private Class declaringClass;
-  private String methodName;
-  private transient Method method;
+  private final Class<?> declaringClass;
+  private final String methodName;
+  private transient @Nullable Method method;
 
   public StaticImportNode(char[] expr, int start, int offset, ParserContext pCtx) {
     super(pCtx);
@@ -42,45 +42,49 @@ public class StaticImportNode extends ASTNode {
       this.expr = expr;
       this.start = start;
       this.offset = offset;
-
       int mark;
-      
-      ClassLoader classLoader = getClassLoader();
-      
-      declaringClass = Class.forName(new String(expr, start, (mark = findLast('.', start, offset, this.expr = expr)) - start),
-          true, classLoader );
 
-      methodName = new String(expr, ++mark, offset - (mark - start));
+      declaringClass = Class.forName(
+				new String(expr, start, (mark = findLast('.', start, offset, this.expr = expr)) - start).trim(),
+				true,
+				getClassLoader()
+			);
 
-      if (resolveMethod() == null) {
-        throw new CompileException("can not find method for static import: "
+      methodName = new String(expr, ++mark, offset - (mark - start)).trim();
+
+      if (resolveMethod() == null)
+        	throw new CompileException("Can't find method for static import: "
             + declaringClass.getName() + "." + methodName, expr, start);
-      }
     }
-    catch (Exception e) {
+    catch (Exception e){
       throw new CompileException("unable to import class", expr, start, e);
     }
   }
 
-  private Method resolveMethod() {
-    for (Method meth : declaringClass.getMethods()) {
-      if (isStatic(meth.getModifiers()) && methodName.equals(meth.getName())) {
-        return method = meth;
-      }
+  private @Nullable Method resolveMethod () {
+    for (Method meth : declaringClass.getMethods()){
+      if (isStatic(meth.getModifiers()) && methodName.equals(meth.getName()))
+        	return method = meth;
     }
+		for (Method meth : declaringClass.getDeclaredMethods()){
+			if (isStatic(meth.getModifiers()) && methodName.equals(meth.getName()))
+				return method = meth;
+		}
     return null;
   }
 
-  public Method getMethod() {
+  public @Nullable Method getMethod() {
     return method;
   }
 
-  public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+  @Override
+	public @Nullable Object getReducedValueAccelerated (Object ctx, Object thisValue, VariableResolverFactory factory) {
     factory.createVariable(methodName, method == null ? method = resolveMethod() : method);
     return null;
   }
 
-  public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+  @Override
+	public @Nullable Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     return getReducedValueAccelerated(ctx, thisValue, factory);
   }
 }

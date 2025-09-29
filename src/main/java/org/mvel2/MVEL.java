@@ -1110,7 +1110,7 @@ public final class MVEL {
    * @param signature  The signature of the method
    * @return An instance of the Method
    */
-  public static Method getStaticMethod (Class<?> cls, String methodName, Class[] signature) {
+  public static Method getStaticMethod (Class<?> cls, String methodName, Class<?>... signature) {
     try {
       Method m = cls.getMethod(methodName, signature);
       if ((m.getModifiers() & Modifier.STATIC) == 0)
@@ -1122,8 +1122,8 @@ public final class MVEL {
 				if ((m.getModifiers() & Modifier.STATIC) == 0)
 						throw new RuntimeException("method not a static method: " + methodName +" in "+ cls, e);
 				return m;
-			} catch (NoSuchMethodException ex){
-				throw new RuntimeException("no such method: " + methodName, e);
+			} catch (NoSuchMethodException ignored){
+				throw new RuntimeException("no such method: "+ methodName +" in "+ cls, e);
 			}
     }
   }
