@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.mvel2.ast;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.CompileException;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
@@ -45,38 +45,36 @@ public class ImportNode extends ASTNode {
     this.offset = offset;
     this.pCtx = pCtx;
 
-    if (ParseTools.endsWith(expr, start, offset, WC_TEST)) {
+    if (ParseTools.endsWith(expr, start, offset, WC_TEST)){
       packageImport = true;
-      _offset = (short) ParseTools.findLast(expr, start, offset, '.');
-      if (_offset == -1) {
-        _offset = 0;
-      }
+      _offset = ParseTools.findLast(expr, start, offset, '.');
+      if (_offset < 0)
+        	_offset = 0;
     }
     else {
-      String clsName = new String(expr, start, offset);
+      String clsName = new String(expr, start, offset).trim();
 
       ClassLoader classLoader = getClassLoader();
-      
+
       try {
         this.importClass = Class.forName(clsName, true, classLoader );
       }
-      catch (ClassNotFoundException e) {
+      catch (ClassNotFoundException e){// try fallback to SomeLocal$ClassName
         int idx;
-        clsName = (clsName.substring(0, idx = clsName.lastIndexOf('.')) + "$" + clsName.substring(idx + 1)).trim();
+        clsName = (clsName.substring(0, idx = clsName.lastIndexOf('.')) +'$'+ clsName.substring(idx + 1)).trim();
 
         try {
           this.importClass = Class.forName(clsName, true, classLoader );
-        }
-        catch (ClassNotFoundException e2) {
-          throw new CompileException("class not found: " + new String(expr), expr, start);
+        } catch (ClassNotFoundException ignore){
+          throw new CompileException("import class not found: " + new String(expr), expr, start, e);
         }
       }
     }
   }
 
-
-  public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
-    if (!packageImport) {
+  @Override
+	public @Nullable Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    if (!packageImport){
       if (MVEL.COMPILER_OPT_ALLOCATE_TYPE_LITERALS_TO_SHARED_SYMBOL_TABLE) {
         factory.createVariable(importClass.getSimpleName(), importClass);
         return importClass;
@@ -87,31 +85,24 @@ public class ImportNode extends ASTNode {
     // if the factory is an ImmutableDefaultFactory it means this import is unused so we can skip it safely
     if (!(factory instanceof ImmutableDefaultFactory)
         && !(factory instanceof StackResetResolverFactory
-        && ((StackResetResolverFactory) factory).getDelegate() instanceof ImmutableDefaultFactory)) {
+        && ((StackResetResolverFactory) factory).getDelegate() instanceof ImmutableDefaultFactory)
+		){
       findClassImportResolverFactory(factory, pCtx).addPackageImport(new String(expr, start, _offset - start));
     }
     return null;
   }
 
-  public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+  @Override
+	public @Nullable Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     return getReducedValueAccelerated(ctx, thisValue, factory);
   }
 
 
-  public Class getImportClass() {
-    return importClass;
-  }
+  public Class<?> getImportClass (){ return importClass; }
 
-  public boolean isPackageImport() {
-    return packageImport;
-  }
-
-  public void setPackageImport(boolean packageImport) {
-    this.packageImport = packageImport;
-  }
+  public boolean isPackageImport (){ return packageImport; }
 
   public String getPackageImport() {
     return new String(expr, start, _offset - start);
   }
 }
-
