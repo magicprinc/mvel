@@ -1,6 +1,6 @@
 package org.mvel2.templates.util.io;
 
-import org.mvel2.templates.util.TemplateOutputStream;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -9,7 +9,10 @@ import java.nio.charset.Charset;
 
 import static java.nio.charset.StandardCharsets.*;
 
-public class StandardOutputStream implements TemplateOutputStream {
+/// @see Appendable
+/// @see StringBuilder
+/// @see java.io.OutputStreamWriter
+public class StandardOutputStream implements Appendable {
   private final OutputStream outputStream;
   private final Charset charset;
 
@@ -24,7 +27,7 @@ public class StandardOutputStream implements TemplateOutputStream {
 	}
 
   @Override
-	public TemplateOutputStream append (CharSequence c) {
+	public StandardOutputStream append (CharSequence c) {
     try {
 			outputStream.write(c.toString().getBytes(charset));
       return this;
@@ -33,20 +36,31 @@ public class StandardOutputStream implements TemplateOutputStream {
     }
   }
 
-  @Override
-	public TemplateOutputStream append (char[] c) {
-    try {
-			outputStream.write(new String(c).getBytes(charset));
-      return this;
-    } catch (IOException e){
-      throw new UncheckedIOException("failed to write to stream", e);
-    }
-  }
+	@Override
+	public StandardOutputStream append (CharSequence csq, int start, int end) throws IOException {
+		try {
+			outputStream.write(csq.subSequence(start,end).toString().getBytes(charset));
+			return this;
+		} catch (IOException e){
+			throw new UncheckedIOException("failed to write to stream", e);
+		}
+	}
+
+	@Deprecated
+	@Override
+	public StandardOutputStream append (char c) throws IOException {
+		try {
+			outputStream.write(String.valueOf(c).getBytes(charset));
+			return this;
+		} catch (IOException e){
+			throw new UncheckedIOException("failed to write to stream", e);
+		}
+	}
 
 	public void close () throws IOException {
 		outputStream.close();
 	}
 
 	/// special meaning: no result of accumulating
-	@Override public String toString (){ return null; }
+	@Override public @Nullable String toString (){ return null; }
 }

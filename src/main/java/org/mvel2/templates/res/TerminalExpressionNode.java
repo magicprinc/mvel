@@ -21,7 +21,6 @@ package org.mvel2.templates.res;
 import org.mvel2.MVEL;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 
 public class TerminalExpressionNode extends Node {
   public TerminalExpressionNode() {
@@ -35,11 +34,13 @@ public class TerminalExpressionNode extends Node {
     this.cEnd = node.cEnd;
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
+  @Override
+	public Object eval(TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
     return MVEL.eval(contents, cStart, cEnd - cStart, ctx, factory);
   }
 
-  public boolean demarcate(Node terminatingNode, char[] template) {
+  @Override
+	public boolean demarcate(Node terminatingNode, char[] template) {
     return false;
   }
 }

@@ -18,13 +18,13 @@
 
 package org.mvel2.util;
 
-import static java.nio.charset.StandardCharsets.*;
+import org.jspecify.annotations.Nullable;
 
 /**
  *
  * @author Mike Brock
  */
-public final class StringAppender implements CharSequence {
+public final class StringAppender implements CharSequence, Appendable {
 	final StringBuilder sb;
 
   public StringAppender() {
@@ -33,11 +33,6 @@ public final class StringAppender implements CharSequence {
 
   public StringAppender (int capacity) {
     sb = new StringBuilder(capacity);
-  }
-
-  public StringAppender(char c) {
-		this();
-		sb.append(c);
   }
 
   public StringAppender (char[] s) {
@@ -50,6 +45,7 @@ public final class StringAppender implements CharSequence {
 		sb.append(s);
   }
 
+
   public StringAppender append (char[] chars) {
 		if (chars != null)
 			sb.append(chars);
@@ -61,29 +57,27 @@ public final class StringAppender implements CharSequence {
     return this;
   }
 
-  public StringAppender append (Object o) {
-		if (o != null)
-			sb.append(o);
-		return this;
-  }
-
-	public StringAppender append (byte[] o) {
-		if (o != null)
-			sb.append(new String(o, UTF_8));
-		return this;
-	}
-
-  public StringAppender append (CharSequence s) {
+  @Override
+	public StringAppender append (@Nullable CharSequence s) {
 		if (s != null)
-			sb.append(s);
+				sb.append(s);
     return this;
   }
 
-  public StringAppender append (char c) {
+	@Override
+	public StringAppender append (CharSequence cs, int start, int len) {
+		if (cs != null && start < cs.length())
+				sb.append(cs, start, start+len);// start..end
+		return this;
+	}
+
+	@Override
+	public StringAppender append (char c) {
 		sb.append(c);
     return this;
   }
 
+	@Deprecated(forRemoval = true)
 	public StringAppender append (byte c) {
 		sb.append((char)c);
 		return this;

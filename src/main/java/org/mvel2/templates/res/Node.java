@@ -18,9 +18,9 @@
 
 package org.mvel2.templates.res;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 
 import java.io.Serializable;
 
@@ -60,7 +60,7 @@ public abstract class Node implements Serializable {
     this.next = next;
   }
 
-  public abstract Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory);
+  public abstract Object eval(TemplateRuntime runtime, Appendable appender, @Nullable Object ctx, @Nullable VariableResolverFactory factory);
 
   public String getName() {
     return name;

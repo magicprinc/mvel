@@ -18,10 +18,10 @@
 
 package org.mvel2.templates.res;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.MVEL;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 import org.mvel2.util.ParseTools;
 
 public class IfNode extends Node {
@@ -49,16 +49,17 @@ public class IfNode extends Node {
     this.elseNode = elseNode;
   }
 
-  public boolean demarcate(Node terminatingNode, char[] template) {
+  @Override
+	public boolean demarcate(Node terminatingNode, char[] template) {
     trueNode = next;
     next = terminus;
     return true;
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
-    if (cEnd == cStart || MVEL.eval(contents, cStart, cEnd - cStart, ctx, factory, Boolean.class)) {
-      return trueNode.eval(runtime, appender, ctx, factory);
-    }
+  @Override
+	public @Nullable Object eval(TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
+    if (cEnd == cStart || MVEL.eval(contents, cStart, cEnd - cStart, ctx, factory, Boolean.class))
+      	return trueNode.eval(runtime, appender, ctx, factory);
     return next != null ? next.eval(runtime, appender, ctx, factory) : null;
   }
 }

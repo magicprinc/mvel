@@ -1,5 +1,6 @@
 package org.mvel2.ast;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.CompileException;
 import org.mvel2.ParserContext;
 import org.mvel2.UnresolveablePropertyException;
@@ -82,7 +83,7 @@ public class Proto extends ASTNode {
       this.initValue = stmt;
     }
 
-    public Object call(Object ctx, Object thisCtx, VariableResolverFactory factory, Object[] parms) {
+    public Object call(@Nullable Object ctx, Object thisCtx, VariableResolverFactory factory, Object[] parms) {
       switch (type) {
         case FUNCTION:
           return ((Function) receiver).call(ctx, thisCtx, new InvokationContextFactory(factory, instance.instanceStates), parms);

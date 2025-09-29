@@ -22,16 +22,22 @@ import org.mvel2.MVEL;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateError;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
+import static java.nio.charset.StandardCharsets.*;
+import static org.mvel2.templates.util.TemplateTools.append;
 import static org.mvel2.templates.util.TemplateTools.captureToEOS;
+import static org.mvel2.templates.util.TemplateTools.close;
 
 public class IncludeNode extends Node {
 //    private char[] includeExpression;
 //    private char[] preExpression;
-
   int includeStart;
   int includeOffset;
 
@@ -57,60 +63,55 @@ public class IncludeNode extends Node {
 //        if (mark != contents.length) this.preExpression = subset(contents, ++mark, contents.length - mark);
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
+  @Override
+	public Object eval (TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
     String file = MVEL.eval(contents, includeStart, includeOffset, ctx, factory, String.class);
 
-    if (preOffset != 0) {
-      MVEL.eval(contents, preStart, preOffset, ctx, factory);
-    }
+    if (preOffset != 0)
+      	MVEL.eval(contents, preStart, preOffset, ctx, factory);
 
-    if (next != null) {
-      return next.eval(runtime, appender.append(String.valueOf(TemplateRuntime.eval(readInFile(runtime, file), ctx, factory))), ctx, factory);
-    }
-    else {
-      return appender.append(String.valueOf(MVEL.eval(readInFile(runtime, file), ctx, factory)));
-    }
+    if (next != null)
+      return next.eval(runtime, append(appender, TemplateRuntime.eval(readInFile(runtime, file), ctx, factory)), ctx, factory);
+    else
+      return append(appender, MVEL.eval(readInFile(runtime, file), ctx, factory));
   }
 
-  public boolean demarcate(Node terminatingNode, char[] template) {
+  @Override
+	public boolean demarcate(Node terminatingNode, char[] template) {
     return false;
   }
 
 
-  public static String readInFile(TemplateRuntime runtime, String fileName) {
-    File file = new File(String.valueOf(runtime.getRelPath().peek()) + "/" + fileName);
-
+	static String readInFile (TemplateRuntime runtime, String fileName) {
+    File file = new File(runtime.getRelPath().peek() +"/"+ fileName);
+		BufferedReader in = null;
     try {
-      FileInputStream instream = new FileInputStream(file);
-      BufferedInputStream bufstream = new BufferedInputStream(instream);
+      in = new BufferedReader(new InputStreamReader(new FileInputStream(file), UTF_8));
 
       runtime.getRelPath().push(file.getParent());
 
-      byte[] buf = new byte[10];
-      int read;
-      int i;
+			var sb = new StringBuilder(99);
 
-      StringBuilder appender = new StringBuilder();
-
-      while ((read = bufstream.read(buf)) != -1) {
-        for (i = 0; i < read; i++) {
-          appender.append((char) buf[i]);
-        }
-      }
-
-      bufstream.close();
-      instream.close();
+			String currentLine;
+			boolean onFirstLine = true;
+			while ((currentLine = in.readLine()) != null){
+				if (onFirstLine)
+						onFirstLine = false;
+				else
+						sb.append('\n');
+				sb.append(currentLine);
+			}
 
       runtime.getRelPath().pop();
 
-      return appender.toString();
+      return sb.toString();
 
-    }
-    catch (FileNotFoundException e) {
-      throw new TemplateError("cannot include template '" + fileName + "': file not found.");
-    }
-    catch (IOException e) {
+    } catch (FileNotFoundException e) {
+      throw new TemplateError("cannot include template '" + fileName + "': file not found.", e);
+    } catch (IOException e) {
       throw new TemplateError("unknown I/O exception while including '" + fileName + "' (stacktrace nested)", e);
-    }
+    } finally {
+			close(in);
+		}
   }
 }

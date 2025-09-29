@@ -1,14 +1,14 @@
 package org.mvel2.util;
 
 import junit.framework.TestCase;
-import org.junit.Test;
 
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 /// @see PropertyTools
 public class PropertyToolsTest extends TestCase {
-	@Test
 	public void testGetGetter() {
 		Method getter = PropertyTools.getGetter(ClassA.class, "resource");
 		assertEquals("isResource", getter.getName());
@@ -43,12 +43,24 @@ public class PropertyToolsTest extends TestCase {
 		}
 	}
 
-	@Test
 	public void testIsEmpty () {
-		assertTrue(PropertyTools.isEmpty(null));
+		assertTrue(PropertyTools.isEmpty((Collection<?>) null));
+		assertTrue(PropertyTools.isEmpty((Object) null));
+		assertTrue(PropertyTools.isEmpty((Map<?,?>) null));
+		assertTrue(PropertyTools.isEmpty((String[]) null));
+
+		assertTrue(PropertyTools.isEmpty((Object)""));
 		assertTrue(PropertyTools.isEmpty(""));
+
+		assertTrue(PropertyTools.isEmpty((Object) ArrayTools.EMPTY_STR));
+		assertTrue(PropertyTools.isEmpty(ArrayTools.EMPTY_STR));
+
+		assertTrue(PropertyTools.isEmpty((Object)"null"));
 		assertTrue(PropertyTools.isEmpty("null"));
+
+		assertTrue(PropertyTools.isEmpty((Object)Collections.emptyList()));
 		assertTrue(PropertyTools.isEmpty(Collections.emptyList()));
+		assertTrue(PropertyTools.isEmpty((Object)Collections.emptyMap()));
 		assertTrue(PropertyTools.isEmpty(Collections.emptyMap()));
 
 		assertFalse(PropertyTools.isEmpty(42));

@@ -18,10 +18,7 @@
 
 package org.mvel2.compiler;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import org.jspecify.annotations.Nullable;
 import org.mvel2.CompileException;
 import org.mvel2.ErrorDetail;
 import org.mvel2.MVEL;
@@ -41,6 +38,10 @@ import org.mvel2.util.ErrorUtil;
 import org.mvel2.util.ExecutionStack;
 import org.mvel2.util.ParseTools;
 import org.mvel2.util.StringAppender;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import static org.mvel2.DataConversion.canConvert;
 import static org.mvel2.DataConversion.convert;
@@ -82,17 +83,16 @@ public class ExpressionCompiler extends AbstractParser {
             iter.remove();
           }
           else {
-            err.append("\n - ").append("(").append(e.getLineNumber()).append(",").append(e.getColumn()).append(")")
-                .append(" ").append(e.getMessage());
+            err.append("\n - ").append('(').append(Integer.toString(e.getLineNumber())).append(',')
+							.append(Integer.toString(e.getColumn())).append(") ").append(e.getMessage());
           }
         }
 
         //noinspection ThrowFromFinallyBlock
         throw new CompileException("Failed to compileShared: " + pCtx.getErrorList().size()
-            + " compilation error(s): " + err.toString(), pCtx.getErrorList(), expr, cursor, pCtx);
+            + " compilation error(s): " + err, pCtx.getErrorList(), expr, cursor, pCtx);
       }
     }
-
   }
 
   /**
@@ -100,7 +100,7 @@ public class ExpressionCompiler extends AbstractParser {
    *
    * @return compiled expression object
    */
-  public CompiledExpression _compile() {
+  public @Nullable CompiledExpression _compile() {
     ASTNode tk;
     ASTNode tkOp;
     ASTNode tkOp2;
@@ -118,14 +118,13 @@ public class ExpressionCompiler extends AbstractParser {
     boolean firstLA;
 
     try {
-      if (verifying) {
-        pCtx.initializeTables();
-      }
+      if (verifying)
+        	pCtx.initializeTables();
 
       fields |= COMPILE_IMMEDIATE;
 
       main_loop: while ((tk = nextToken()) != null) {
-        /**
+        /*
          * If this is a debug symbol, just add it and continue.
          */
         if (tk.fields == -1) {
@@ -133,7 +132,7 @@ public class ExpressionCompiler extends AbstractParser {
           continue;
         }
 
-        /**
+        /*
          * Record the type of the current node..
          */
         returnType = tk.getEgressType();
@@ -155,7 +154,7 @@ public class ExpressionCompiler extends AbstractParser {
           returnType = rt;
         }
 
-        /**
+        /*
          * This kludge of code is to handle compileShared-time literal reduction.  We need to avoid
          * reducing for certain literals like, 'this', ternary and ternary else.
          */

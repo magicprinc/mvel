@@ -14,6 +14,7 @@
  */
 package org.mvel2;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.compiler.CompiledAccExpression;
 import org.mvel2.compiler.CompiledExpression;
 import org.mvel2.compiler.ExecutableStatement;
@@ -32,11 +33,13 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
 import static java.lang.Boolean.getBoolean;
 import static java.lang.String.valueOf;
+import static java.nio.charset.StandardCharsets.*;
 import static org.mvel2.DataConversion.convert;
 import static org.mvel2.MVELRuntime.execute;
 import static org.mvel2.util.ParseTools.loadFromFile;
@@ -46,16 +49,16 @@ import static org.mvel2.util.ParseTools.optimizeTree;
  * The MVEL convienence class is a collection of static methods that provides a set of easy integration points for
  * MVEL.  The vast majority of MVEL's core functionality can be directly accessed through methods in this class.
  */
-public class MVEL {
+public final class MVEL {
   public static final String NAME = "MVEL (MVFLEX Expression Language)";
-  public static final String VERSION = "2.3";
+  public static final String VERSION = "2.6";
   public static final String VERSION_SUB = "0";
   public static final String CODENAME = "liberty";
   static boolean DEBUG_FILE = getBoolean("mvel2.debug.fileoutput");
   static String ADVANCED_DEBUGGING_FILE = System.getProperty("mvel2.debugging.file") == null ? "mvel_debug.txt" : System.getProperty("mvel2.debugging.file");
   static boolean ADVANCED_DEBUG = getBoolean("mvel2.advanced_debugging");
-  static boolean WEAK_CACHE = getBoolean("mvel2.weak_caching");
-  static boolean NO_JIT = getBoolean("mvel2.disable.jit");
+  //static boolean WEAK_CACHE = getBoolean("mvel2.weak_caching");
+  //static boolean NO_JIT = getBoolean("mvel2.disable.jit");
   public static boolean INVOKED_METHOD_EXCEPTIONS_BUBBLE = getBoolean("mvel2.invoked_meth_exceptions_bubble");
   public static boolean COMPILER_OPT_ALLOW_NAKED_METH_CALL = getBoolean("mvel2.compiler.allow_naked_meth_calls");
   public static boolean COMPILER_OPT_ALLOW_OVERRIDE_ALL_PROPHANDLING = getBoolean("mvel2.compiler.allow_override_all_prophandling");
@@ -67,13 +70,11 @@ public class MVEL {
   static boolean OPTIMIZER = true;
 
   static {
-    if (System.getProperty("mvel2.optimizer") != null) {
-      OPTIMIZER = getBoolean("mvel2.optimizer");
-    }
+    if (System.getProperty("mvel2.optimizer") != null)
+      	OPTIMIZER = getBoolean("mvel2.optimizer");
   }
 
-  private MVEL() {
-  }
+  private MVEL(){}//new
 
   public static boolean isAdvancedDebugging() {
     return ADVANCED_DEBUG;
@@ -345,7 +346,7 @@ public class MVEL {
    * @return The resultant value
    * @see #eval(String, Map)
    */
-  public static String evalToString(String expression, Map vars) {
+  public static String evalToString(String expression, Map<String,Object> vars) {
     return valueOf(eval(expression, vars));
   }
 
@@ -371,7 +372,7 @@ public class MVEL {
    * @return The resultant value
    * @see #eval(String, Map)
    */
-  public static String evalToString(String expression, Object ctx, Map vars) {
+  public static String evalToString(String expression, Object ctx, Map<String,Object> vars) {
     return valueOf(eval(expression, ctx, vars));
   }
 
@@ -411,7 +412,7 @@ public class MVEL {
    * @return The resultant value
    * @see #eval(String, Object, VariableResolverFactory)
    */
-  public static Object eval(char[] expression, Object ctx, VariableResolverFactory vars) {
+  public static Object eval(char[] expression, @Nullable Object ctx, VariableResolverFactory vars) {
     return new MVELInterpretedRuntime(expression, ctx, vars).parse();
   }
 
@@ -432,7 +433,7 @@ public class MVEL {
    * @return The resultant value
    * @see #eval(String, Object, Map)
    */
-  public static Object eval(char[] expression, Object ctx, Map vars) {
+  public static Object eval(char[] expression, Object ctx, Map<String,Object> vars) {
     return new MVELInterpretedRuntime(expression, ctx, vars).parse();
   }
 
@@ -521,11 +522,11 @@ public class MVEL {
    * @throws IOException Exception thrown if there is an IO problem accessing the file.
    */
   public static Object evalFile(File file) throws IOException {
-    return _evalFile(file, null, new CachedMapVariableResolverFactory(new HashMap()));
+    return _evalFile(file, null, new CachedMapVariableResolverFactory(new HashMap<>()));
   }
 
-  public static Object evalFile(File file, String encoding) throws IOException {
-    return _evalFile(file, encoding, null, new CachedMapVariableResolverFactory(new HashMap()));
+  public static Object evalFile (File file, String encoding) throws IOException {
+    return _evalFile(file, encoding, null, new CachedMapVariableResolverFactory(new HashMap<>()));
   }
 
   /**
@@ -537,11 +538,11 @@ public class MVEL {
    * @throws IOException Exception thrown if there is an IO problem accessing the file.
    */
   public static Object evalFile(File file, Object ctx) throws IOException {
-    return _evalFile(file, ctx, new CachedMapVariableResolverFactory(new HashMap()));
+    return _evalFile(file, ctx, new CachedMapVariableResolverFactory(new HashMap<>()));
   }
 
   public static Object evalFile(File file, String encoding, Object ctx) throws IOException {
-    return _evalFile(file, encoding, ctx, new CachedMapVariableResolverFactory(new HashMap()));
+    return _evalFile(file, encoding, ctx, new CachedMapVariableResolverFactory(new HashMap<>()));
   }
 
   /**
@@ -553,7 +554,7 @@ public class MVEL {
    * @throws IOException Exception thrown if there is an IO problem accessing the file.
    */
   public static Object evalFile(File file, Map<String, Object> vars) throws IOException {
-    CachingMapVariableResolverFactory factory = new CachingMapVariableResolverFactory(vars);
+    var factory = new CachingMapVariableResolverFactory(vars);
     try {
       return _evalFile(file, null, factory);
     }
@@ -608,13 +609,13 @@ public class MVEL {
     return _evalFile(file, encoding, ctx, vars);
   }
 
-  private static Object _evalFile(File file, Object ctx, VariableResolverFactory factory) throws IOException {
+  private static Object _evalFile(File file, @Nullable Object ctx, VariableResolverFactory factory) throws IOException {
     return _evalFile(file, null, ctx, factory);
   }
 
-  private static Object _evalFile(File file, String encoding, Object ctx, VariableResolverFactory factory) throws IOException {
-    return eval(loadFromFile(file, encoding), ctx, factory);
-  }
+	private static Object _evalFile(File file, @Nullable String encoding, @Nullable Object ctx, VariableResolverFactory factory) throws IOException {
+		return eval(loadFromFile(file, encoding != null ? Charset.forName(encoding) : UTF_8), ctx, factory);
+	}
 
   /**
    * Evaluate an expression in Boolean-only mode against a root context object and injected variables.
@@ -691,7 +692,7 @@ public class MVEL {
   }
 
   public static Class analyze(char[] expression, ParserContext ctx) {
-    ExpressionCompiler compiler = new ExpressionCompiler(expression, ctx);
+    var compiler = new ExpressionCompiler(expression, ctx);
     compiler.setVerifyOnly(true);
     compiler.compile();
     return compiler.getReturnType();
@@ -930,9 +931,8 @@ public class MVEL {
    * @return -
    * @see #compileExpression(String)
    */
-  @SuppressWarnings({"unchecked"})
-  public static Object executeExpression(final Object compiledExpression, final Object ctx, final Map vars) {
-    CachingMapVariableResolverFactory factory = vars != null ? new CachingMapVariableResolverFactory(vars) : null;
+  public static Object executeExpression (Object compiledExpression, Object ctx, Map<String,Object> vars) {
+    var factory = vars != null ? new CachingMapVariableResolverFactory(vars) : null;
     try {
       return ((ExecutableStatement) compiledExpression).getValue(ctx, factory);
     }
@@ -941,7 +941,7 @@ public class MVEL {
     }
   }
 
-  public static Object executeExpression(final Object compiledExpression, final Object ctx, final VariableResolverFactory resolverFactory) {
+  public static Object executeExpression (Object compiledExpression, Object ctx, VariableResolverFactory resolverFactory) {
     return ((ExecutableStatement) compiledExpression).getValue(ctx, resolverFactory);
   }
 
@@ -953,7 +953,7 @@ public class MVEL {
    * @return -
    * @see #compileExpression(String)
    */
-  public static Object executeExpression(final Object compiledExpression, final VariableResolverFactory factory) {
+  public static Object executeExpression (Object compiledExpression, VariableResolverFactory factory) {
     return ((ExecutableStatement) compiledExpression).getValue(null, factory);
   }
 
@@ -965,7 +965,7 @@ public class MVEL {
    * @return -
    * @see #compileExpression(String)
    */
-  public static Object executeExpression(final Object compiledExpression, final Object ctx) {
+  public static Object executeExpression(Object compiledExpression, Object ctx) {
     return ((ExecutableStatement) compiledExpression).getValue(ctx, new ImmutableDefaultFactory());
   }
 
@@ -977,9 +977,8 @@ public class MVEL {
    * @return -
    * @see #compileExpression(String)
    */
-  @SuppressWarnings({"unchecked"})
-  public static Object executeExpression(final Object compiledExpression, final Map vars) {
-    CachingMapVariableResolverFactory factory = new CachingMapVariableResolverFactory(vars);
+  public static Object executeExpression(Object compiledExpression, Map<String,Object> vars) {
+    var factory = new CachingMapVariableResolverFactory(vars);
     try {
       return ((ExecutableStatement) compiledExpression).getValue(null, factory);
     }
@@ -998,8 +997,7 @@ public class MVEL {
    * @param <T> type
    * @return -
    */
-  @SuppressWarnings({"unchecked"})
-  public static <T> T executeExpression(final Object compiledExpression, final Object ctx, final Map vars, Class<T> toType) {
+  public static <T> T executeExpression(final Object compiledExpression, final Object ctx, Map<String,Object> vars, Class<T> toType) {
     return convert(executeExpression(compiledExpression, ctx, vars), toType);
   }
 
@@ -1016,8 +1014,7 @@ public class MVEL {
    * @param <T> type
    * @return -
    */
-  @SuppressWarnings({"unchecked"})
-  public static <T> T executeExpression(final Object compiledExpression, Map vars, Class<T> toType) {
+  public static <T> T executeExpression(final Object compiledExpression, Map<String,Object> vars, Class<T> toType) {
     return convert(executeExpression(compiledExpression, vars), toType);
   }
 
@@ -1040,36 +1037,34 @@ public class MVEL {
     }
   }
 
-  public static void executeExpression(Iterable<CompiledExpression> compiledExpression, Object ctx) {
-    for (CompiledExpression ce : compiledExpression) {
-      ce.getValue(ctx, null);
-    }
+  public static void executeExpression (Iterable<CompiledExpression> compiledExpression, Object ctx) {
+    for (CompiledExpression ce : compiledExpression)
+      	ce.getValue(ctx, null);
   }
 
-  public static void executeExpression(Iterable<CompiledExpression> compiledExpression, Map vars) {
-    CachingMapVariableResolverFactory factory = new CachingMapVariableResolverFactory(vars);
+  public static void executeExpression(Iterable<CompiledExpression> compiledExpression, Map<String,Object> vars) {
+    var factory = new CachingMapVariableResolverFactory(vars);
     executeExpression(compiledExpression, null, factory);
     factory.externalize();
   }
 
-  public static void executeExpression(Iterable<CompiledExpression> compiledExpression, Object ctx, Map vars) {
-    CachingMapVariableResolverFactory factory = new CachingMapVariableResolverFactory(vars);
+  public static void executeExpression(Iterable<CompiledExpression> compiledExpression, Object ctx, Map<String,Object> vars) {
+    var factory = new CachingMapVariableResolverFactory(vars);
     executeExpression(compiledExpression, ctx, factory);
     factory.externalize();
   }
 
-  public static void executeExpression(Iterable<CompiledExpression> compiledExpression, Object ctx, VariableResolverFactory vars) {
-    for (CompiledExpression ce : compiledExpression) {
-      ce.getValue(ctx, vars);
-    }
+  public static void executeExpression (Iterable<CompiledExpression> compiledExpression, @Nullable Object ctx, VariableResolverFactory vars) {
+    for (CompiledExpression ce : compiledExpression)
+      	ce.getValue(ctx, vars);
   }
 
   public static Object[] executeAllExpression(Serializable[] compiledExpressions, Object ctx, VariableResolverFactory vars) {
-    if (compiledExpressions == null) return GetterAccessor.EMPTY;
-    Object[] o = new Object[compiledExpressions.length];
-    for (int i = 0; i < compiledExpressions.length; i++) {
-      o[i] = executeExpression(compiledExpressions[i], ctx, vars);
-    }
+    if (compiledExpressions == null)
+				return GetterAccessor.EMPTY;
+    var o = new Object[compiledExpressions.length];
+    for (int i = 0; i < compiledExpressions.length; i++)
+      	o[i] = executeExpression(compiledExpressions[i], ctx, vars);
     return o;
   }
 
@@ -1115,15 +1110,21 @@ public class MVEL {
    * @param signature  The signature of the method
    * @return An instance of the Method
    */
-  public static Method getStaticMethod(Class cls, String methodName, Class[] signature) {
+  public static Method getStaticMethod (Class<?> cls, String methodName, Class[] signature) {
     try {
       Method m = cls.getMethod(methodName, signature);
       if ((m.getModifiers() & Modifier.STATIC) == 0)
-        throw new RuntimeException("method not a static method: " + methodName);
+        	throw new RuntimeException("method not a static method: " + methodName +" in "+ cls);
       return m;
-    }
-    catch (NoSuchMethodException e) {
-      throw new RuntimeException("no such method: " + methodName, e);
+    } catch (Exception e){// NoSuchMethodException
+			try {
+				Method m = cls.getDeclaredMethod(methodName, signature);
+				if ((m.getModifiers() & Modifier.STATIC) == 0)
+						throw new RuntimeException("method not a static method: " + methodName +" in "+ cls, e);
+				return m;
+			} catch (NoSuchMethodException ex){
+				throw new RuntimeException("no such method: " + methodName, e);
+			}
     }
   }
 }

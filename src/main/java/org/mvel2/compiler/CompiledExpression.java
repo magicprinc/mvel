@@ -18,14 +18,15 @@
 
 package org.mvel2.compiler;
 
-import java.io.Serializable;
-
+import org.jspecify.annotations.Nullable;
 import org.mvel2.ParserConfiguration;
 import org.mvel2.ast.ASTNode;
 import org.mvel2.ast.TypeCast;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.optimizers.OptimizerFactory;
 import org.mvel2.util.ASTLinkedList;
+
+import java.io.Serializable;
 
 import static org.mvel2.MVELRuntime.execute;
 
@@ -98,7 +99,7 @@ public class CompiledExpression implements Serializable, ExecutableStatement {
     return getValue(ctx, variableFactory);
   }
 
-  public Object getValue(Object staticContext, VariableResolverFactory factory) {
+  public Object getValue(@Nullable Object staticContext, @Nullable VariableResolverFactory factory) {
     if (!optimized) {
       setupOptimizers();
       try {

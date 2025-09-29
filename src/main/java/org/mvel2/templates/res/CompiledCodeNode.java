@@ -22,7 +22,6 @@ import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 
 import java.io.Serializable;
 
@@ -46,12 +45,13 @@ public class CompiledCodeNode extends Node {
 //                   context);
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
+  public Object eval(TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
     MVEL.executeExpression(ce, ctx, factory);
     return next != null ? next.eval(runtime, appender, ctx, factory) : null;
   }
 
-  public boolean demarcate(Node terminatingNode, char[] template) {
+  @Override
+	public boolean demarcate(Node terminatingNode, char[] template) {
     return false;
   }
 

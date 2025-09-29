@@ -39,37 +39,7 @@ import org.mvel2.optimizers.impl.refl.collection.ArrayCreator;
 import org.mvel2.optimizers.impl.refl.collection.ExprValueAccessor;
 import org.mvel2.optimizers.impl.refl.collection.ListCreator;
 import org.mvel2.optimizers.impl.refl.collection.MapCreator;
-import org.mvel2.optimizers.impl.refl.nodes.ArrayAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.ArrayAccessorNest;
-import org.mvel2.optimizers.impl.refl.nodes.ArrayLength;
-import org.mvel2.optimizers.impl.refl.nodes.ConstructorAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.DynamicFieldAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.DynamicFunctionAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.FieldAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.FieldAccessorNH;
-import org.mvel2.optimizers.impl.refl.nodes.FunctionAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.GetterAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.GetterAccessorNH;
-import org.mvel2.optimizers.impl.refl.nodes.IndexedCharSeqAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.IndexedCharSeqAccessorNest;
-import org.mvel2.optimizers.impl.refl.nodes.IndexedVariableAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.ListAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.ListAccessorNest;
-import org.mvel2.optimizers.impl.refl.nodes.MapAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.MapAccessorNest;
-import org.mvel2.optimizers.impl.refl.nodes.MethodAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.MethodAccessorNH;
-import org.mvel2.optimizers.impl.refl.nodes.Notify;
-import org.mvel2.optimizers.impl.refl.nodes.NullSafe;
-import org.mvel2.optimizers.impl.refl.nodes.PropertyHandlerAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.SetterAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.StaticReferenceAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.StaticVarAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.StaticVarAccessorNH;
-import org.mvel2.optimizers.impl.refl.nodes.ThisValueAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.Union;
-import org.mvel2.optimizers.impl.refl.nodes.VariableAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.WithAccessor;
+import org.mvel2.optimizers.impl.refl.nodes.*;
 import org.mvel2.util.ArrayTools;
 import org.mvel2.util.ErrorUtil;
 import org.mvel2.util.MethodStub;
@@ -97,10 +67,33 @@ import static org.mvel2.DataConversion.canConvert;
 import static org.mvel2.DataConversion.convert;
 import static org.mvel2.MVEL.eval;
 import static org.mvel2.ast.TypeDescriptor.getClassReference;
-import static org.mvel2.integration.GlobalListenerFactory.*;
-import static org.mvel2.integration.PropertyHandlerFactory.*;
+import static org.mvel2.integration.GlobalListenerFactory.hasSetListeners;
+import static org.mvel2.integration.GlobalListenerFactory.notifyGetListeners;
+import static org.mvel2.integration.GlobalListenerFactory.notifySetListeners;
+import static org.mvel2.integration.PropertyHandlerFactory.getNullMethodHandler;
+import static org.mvel2.integration.PropertyHandlerFactory.getNullPropertyHandler;
+import static org.mvel2.integration.PropertyHandlerFactory.getPropertyHandler;
+import static org.mvel2.integration.PropertyHandlerFactory.hasNullMethodHandler;
+import static org.mvel2.integration.PropertyHandlerFactory.hasNullPropertyHandler;
+import static org.mvel2.integration.PropertyHandlerFactory.hasPropertyHandler;
+import static org.mvel2.util.ArrayTools.EMPTY_CLASS;
+import static org.mvel2.util.ArrayTools.EMPTY_OBJ;
 import static org.mvel2.util.CompilerTools.expectType;
-import static org.mvel2.util.ParseTools.*;
+import static org.mvel2.util.ParseTools.balancedCapture;
+import static org.mvel2.util.ParseTools.balancedCaptureWithLineAccounting;
+import static org.mvel2.util.ParseTools.captureContructorAndResidual;
+import static org.mvel2.util.ParseTools.determineActualTargetMethod;
+import static org.mvel2.util.ParseTools.findClass;
+import static org.mvel2.util.ParseTools.getBaseComponentType;
+import static org.mvel2.util.ParseTools.getBestCandidate;
+import static org.mvel2.util.ParseTools.getBestConstructorCandidate;
+import static org.mvel2.util.ParseTools.getSubComponentType;
+import static org.mvel2.util.ParseTools.getWidenedTarget;
+import static org.mvel2.util.ParseTools.parseMethodOrConstructor;
+import static org.mvel2.util.ParseTools.parseParameterList;
+import static org.mvel2.util.ParseTools.repeatChar;
+import static org.mvel2.util.ParseTools.subCompileExpression;
+import static org.mvel2.util.ParseTools.subset;
 import static org.mvel2.util.PropertyTools.getFieldOrAccessor;
 import static org.mvel2.util.PropertyTools.getFieldOrWriteAccessor;
 import static org.mvel2.util.ReflectionUtil.toNonPrimitiveType;
@@ -113,16 +106,10 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
   private AccessorNode rootNode;
   private AccessorNode currNode;
 
-  private Object ctx;
   private Object thisRef;
   private Object val;
 
-  private VariableResolverFactory variableFactory;
-
   private static final int DONE = -1;
-
-  private static final Object[] EMPTYARG = new Object[0];
-  private static final Class[] EMPTYCLS = new Class[0];
 
   private boolean first = true;
 
@@ -132,7 +119,8 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
   public ReflectiveAccessorOptimizer() {
   }
 
-  public void init() {
+  @Override
+	public void init() {
   }
 
   private ReflectiveAccessorOptimizer(ParserContext pCtx, char[] property, int start, int offset, Object ctx,
@@ -344,10 +332,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
             , this.expr, this.start, pCtx);
       }
     }
-    catch (InvocationTargetException e) {
-      throw new PropertyAccessException("could not access property: " + new String(property), this.expr, st, e, pCtx);
-    }
-    catch (IllegalAccessException e) {
+    catch (InvocationTargetException | IllegalAccessException e) {
       throw new PropertyAccessException("could not access property: " + new String(property), this.expr, st, e, pCtx);
     }
     catch (IllegalArgumentException e) {
@@ -565,11 +550,11 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
     Object o;
 
-    if (member instanceof Method) {
+    if (member instanceof Method method){
       try {
-        o = ctx != null ? ((Method) member).invoke(ctx, EMPTYARG) : null;
+        o = ctx != null ? method.invoke(ctx, EMPTY_OBJ) : null;
 
-        if (hasNullPropertyHandler()) {
+        if (hasNullPropertyHandler()){
           addAccessorNode(new GetterAccessorNH((Method) member, getNullPropertyHandler()));
           if (o == null) o = getNullPropertyHandler().getProperty(member.getName(), ctx, variableFactory);
         }
@@ -584,7 +569,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
           throw new PropertyAccessException("could not access field: "
               + cls.getName() + "." + property, this.expr, this.start, pCtx);
 
-        o = iFaceMeth.invoke(ctx, EMPTYARG);
+        o = iFaceMeth.invoke(ctx, EMPTY_OBJ);
 
         if (hasNullPropertyHandler()) {
           addAccessorNode(new GetterAccessorNH((Method) member, getNullMethodHandler()));
@@ -600,7 +585,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
             Class c = Class.forName(member.getDeclaringClass().getName() + "$" + property);
 
             throw new CompileException("name collision between innerclass: " + c.getCanonicalName()
-                + "; and bean accessor: " + property + " (" + member.toString() + ")", expr, tkStart);
+                + "; and bean accessor: " + property + " (" + member + ")", expr, tkStart);
           }
           catch (ClassNotFoundException e2) {
             //fallthru
@@ -672,7 +657,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
         for (Method m : c.getMethods()) {
           if (property.equals(m.getName())) {
             if (pCtx!=null&& pCtx.getParserConfiguration()!=null?pCtx.getParserConfiguration().isAllowNakedMethCall():MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
-              o = m.invoke(null, EMPTY_OBJ_ARR);
+              o = m.invoke(null, EMPTY_OBJ);
               if (hasNullMethodHandler()) {
                 addAccessorNode(new MethodAccessorNH(m, new ExecutableStatement[0], getNullMethodHandler()));
                 if (o == null)
@@ -947,7 +932,6 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
    * @return -
    * @throws Exception -
    */
-  @SuppressWarnings({"unchecked"})
   private Object getMethod(Object ctx, String name) throws Exception {
     int st = cursor;
     String tk = cursor != end
@@ -960,8 +944,8 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     ExecutableStatement[] es;
 
     if (tk.length() == 0) {
-      args = ParseTools.EMPTY_OBJ_ARR;
-      argTypes = ParseTools.EMPTY_CLS_ARR;
+      args = EMPTY_OBJ;
+      argTypes = EMPTY_CLASS;
       es = null;
     }
     else {
@@ -1089,7 +1073,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       }
 
       throw new PropertyAccessException("unable to resolve method: " + cls.getName() + "."
-          + name + "(" + errorBuild.toString() + ") [arglength=" + args.length + "]", this.expr, this.st, pCtx);
+          + name + "(" + errorBuild + ") [arglength=" + args.length + "]", this.expr, this.st, pCtx);
     }
 
     if (es != null) {
@@ -1117,11 +1101,11 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     Object o = ctx != null ? method.invoke(ctx, normalizeArgsForVarArgs(parameterTypes, args, m.isVarArgs())) : null;
 
     if (hasNullMethodHandler()) {
-      addAccessorNode(new MethodAccessorNH(method, (ExecutableStatement[]) es, getNullMethodHandler()));
+      addAccessorNode(new MethodAccessorNH(method, es, getNullMethodHandler()));
       if (o == null) o = getNullMethodHandler().getProperty(m.getName(), ctx, variableFactory);
     }
     else {
-      addAccessorNode(new MethodAccessor(method, (ExecutableStatement[]) es));
+      addAccessorNode(new MethodAccessor(method, es));
     }
 
     /**
@@ -1289,11 +1273,10 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
         }
 
         throw new CompileException("unable to find constructor: " + cls.getName()
-            + "(" + error.toString() + ")", this.expr, this.start);
+            + "(" + error + ")", this.expr, this.start);
       }
       for (int i = 0; i < parms.length; i++) {
-        //noinspection unchecked
-        parms[i] = convert(parms[i], paramTypeVarArgsSafe(cns.getParameterTypes(), i, cns.isVarArgs()));
+				parms[i] = convert(parms[i], paramTypeVarArgsSafe(cns.getParameterTypes(), i, cns.isVarArgs()));
       }
       parms = normalizeArgsForVarArgs(cns.getParameterTypes(), parms, cns.isVarArgs());
 
@@ -1317,7 +1300,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     }
     else {
       ClassLoader classLoader = pCtx != null ? pCtx.getClassLoader() : currentThread().getContextClassLoader();
-      Constructor<?> cns = Class.forName(new String(expression), true, classLoader ).getConstructor(EMPTYCLS);
+      Constructor<?> cns = Class.forName(new String(expression), true, classLoader ).getConstructor(EMPTY_CLASS);
       AccessorNode ca = new ConstructorAccessor(cns, null);
 
       if (cnsRes.length > 1) {
@@ -1335,11 +1318,13 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     }
   }
 
-  public Class getEgressType() {
+  @Override
+	public Class getEgressType() {
     return returnType;
   }
 
-  public boolean isLiteralOnly() {
+  @Override
+	public boolean isLiteralOnly() {
       return false;
   }
 

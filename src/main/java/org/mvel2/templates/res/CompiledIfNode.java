@@ -18,31 +18,29 @@
 
 package org.mvel2.templates.res;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 import org.mvel2.util.ParseTools;
 
 import java.io.Serializable;
 
 public class CompiledIfNode extends IfNode {
-
   private Serializable ce;
 
   public CompiledIfNode(int begin, String name, char[] template, int start, int end, ParserContext context) {
     super(begin, name, template, start, end);
     while (cEnd > cStart && ParseTools.isWhitespace(template[cEnd])) cEnd--;
-    if (cStart != cEnd) {
-      ce = MVEL.compileExpression(template, cStart, cEnd - start, context);
-    }
+    if (cStart != cEnd)
+      	ce = MVEL.compileExpression(template, cStart, cEnd - start, context);
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
-    if (ce == null || MVEL.executeExpression(ce, ctx, factory, Boolean.class)) {
-      return trueNode.eval(runtime, appender, ctx, factory);
-    }
+  @Override
+	public @Nullable Object eval(TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
+    if (ce == null || MVEL.executeExpression(ce, ctx, factory, Boolean.class))
+      	return trueNode.eval(runtime, appender, ctx, factory);
     return next != null ? next.eval(runtime, appender, ctx, factory) : null;
   }
 }

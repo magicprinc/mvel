@@ -17,7 +17,12 @@
  */
 package org.mvel2;
 
-import org.mvel2.ast.*;
+import org.jspecify.annotations.Nullable;
+import org.mvel2.ast.FunctionInstance;
+import org.mvel2.ast.InvokationContextFactory;
+import org.mvel2.ast.Proto;
+import org.mvel2.ast.PrototypalFunctionInstance;
+import org.mvel2.ast.TypeDescriptor;
 import org.mvel2.integration.GlobalListenerFactory;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.integration.impl.ImmutableDefaultFactory;
@@ -27,8 +32,17 @@ import org.mvel2.util.ParseTools;
 import org.mvel2.util.StringAppender;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import static java.lang.Character.isJavaIdentifierPart;
 import static java.lang.Thread.currentThread;
@@ -39,8 +53,24 @@ import static org.mvel2.MVEL.eval;
 import static org.mvel2.ast.TypeDescriptor.getClassReference;
 import static org.mvel2.compiler.AbstractParser.LITERALS;
 import static org.mvel2.integration.GlobalListenerFactory.notifySetListeners;
-import static org.mvel2.integration.PropertyHandlerFactory.*;
-import static org.mvel2.util.ParseTools.*;
+import static org.mvel2.integration.PropertyHandlerFactory.getNullMethodHandler;
+import static org.mvel2.integration.PropertyHandlerFactory.getNullPropertyHandler;
+import static org.mvel2.integration.PropertyHandlerFactory.getPropertyHandler;
+import static org.mvel2.integration.PropertyHandlerFactory.hasNullMethodHandler;
+import static org.mvel2.integration.PropertyHandlerFactory.hasNullPropertyHandler;
+import static org.mvel2.integration.PropertyHandlerFactory.hasPropertyHandler;
+import static org.mvel2.util.ArrayTools.EMPTY_OBJ;
+import static org.mvel2.util.ParseTools.balancedCapture;
+import static org.mvel2.util.ParseTools.balancedCaptureWithLineAccounting;
+import static org.mvel2.util.ParseTools.captureStringLiteral;
+import static org.mvel2.util.ParseTools.findAbsoluteLast;
+import static org.mvel2.util.ParseTools.findClass;
+import static org.mvel2.util.ParseTools.getBaseComponentType;
+import static org.mvel2.util.ParseTools.getBestCandidate;
+import static org.mvel2.util.ParseTools.getWidenedTarget;
+import static org.mvel2.util.ParseTools.isWhitespace;
+import static org.mvel2.util.ParseTools.parseParameterList;
+import static org.mvel2.util.ParseTools.parseWithExpressions;
 import static org.mvel2.util.PropertyTools.getFieldOrAccessor;
 import static org.mvel2.util.PropertyTools.getFieldOrWriteAccessor;
 import static org.mvel2.util.ReflectionUtil.toNonPrimitiveType;
@@ -148,10 +178,7 @@ public class PropertyAccessor {
         return getAllowOverride();
       }
     }
-    catch (InvocationTargetException e) {
-      throw new PropertyAccessException("could not access property", property, cursor, e, pCtx);
-    }
-    catch (IllegalAccessException e) {
+    catch (InvocationTargetException | IllegalAccessException e) {
       throw new PropertyAccessException("could not access property", property, cursor, e, pCtx);
     }
     catch (IndexOutOfBoundsException e) {
@@ -290,15 +317,13 @@ public class PropertyAccessor {
           notifySetListeners(ctx, ex, variableFactory, value);
 
           if (curr instanceof Map) {
-            //noinspection unchecked
-            if (hasPropertyHandler(Map.class))
+						if (hasPropertyHandler(Map.class))
               getPropertyHandler(Map.class).setProperty(ex, curr, variableFactory, value);
             else
               ((Map) curr).put(eval(ex, this.ctx, this.variableFactory), value);
           }
           else if (curr instanceof List) {
-            //noinspection unchecked
-            if (hasPropertyHandler(List.class))
+						if (hasPropertyHandler(List.class))
               getPropertyHandler(List.class).setProperty(ex, curr, variableFactory, value);
             else
               ((List) curr).set(eval(ex, this.ctx, this.variableFactory, Integer.class), value);
@@ -376,13 +401,10 @@ public class PropertyAccessor {
             + (curr == null ? "Unknown" : curr.getClass().getName()), property, cursor, pCtx);
       }
     }
-    catch (InvocationTargetException e) {
+    catch (InvocationTargetException | IllegalAccessException e) {
       throw new PropertyAccessException("could not access property", property, st, e, pCtx);
     }
-    catch (IllegalAccessException e) {
-      throw new PropertyAccessException("could not access property", property, st, e, pCtx);
-    }
-  }
+	}
 
 
   private int nextToken() {
@@ -478,17 +500,14 @@ public class PropertyAccessor {
 
   private static void addReadCache(Class cls, Integer property, Member member) {
     synchronized (READ_PROPERTY_RESOLVER_CACHE) {
-      WeakHashMap<Integer, WeakReference<Member>> nestedMap = READ_PROPERTY_RESOLVER_CACHE.get(cls);
+			WeakHashMap<Integer,WeakReference<Member>> nestedMap = READ_PROPERTY_RESOLVER_CACHE.computeIfAbsent(cls,
+					k->new WeakHashMap<Integer,WeakReference<Member>>());
 
-      if (nestedMap == null) {
-        READ_PROPERTY_RESOLVER_CACHE.put(cls, nestedMap = new WeakHashMap<Integer, WeakReference<Member>>());
-      }
-
-      nestedMap.put(property, new WeakReference<Member>(member));
+			nestedMap.put(property, new WeakReference<Member>(member));
     }
   }
 
-  private static Member checkReadCache(Class cls, Integer property) {
+  private static @Nullable Member checkReadCache(Class cls, Integer property) {
     WeakHashMap<Integer, WeakReference<Member>> map = READ_PROPERTY_RESOLVER_CACHE.get(cls);
     if (map != null) {
       WeakReference<Member> member = map.get(property);
@@ -499,15 +518,13 @@ public class PropertyAccessor {
 
   private static void addWriteCache(Class cls, Integer property, Member member) {
     synchronized (WRITE_PROPERTY_RESOLVER_CACHE) {
-      WeakHashMap<Integer, WeakReference<Member>> map = WRITE_PROPERTY_RESOLVER_CACHE.get(cls);
-      if (map == null) {
-        WRITE_PROPERTY_RESOLVER_CACHE.put(cls, map = new WeakHashMap<Integer, WeakReference<Member>>());
-      }
-      map.put(property, new WeakReference<Member>(member));
+			WeakHashMap<Integer,WeakReference<Member>> map = WRITE_PROPERTY_RESOLVER_CACHE.computeIfAbsent(cls,
+					k->new WeakHashMap<Integer,WeakReference<Member>>());
+			map.put(property, new WeakReference<Member>(member));
     }
   }
 
-  private static Member checkWriteCache(Class cls, Integer property) {
+  private static @Nullable Member checkWriteCache(Class cls, Integer property) {
     Map<Integer, WeakReference<Member>> map = WRITE_PROPERTY_RESOLVER_CACHE.get(cls);
     if (map != null) {
       WeakReference<Member> member = map.get(property);
@@ -529,15 +546,13 @@ public class PropertyAccessor {
 
   private static void addMethodCache(Class cls, Integer property, Method member) {
     synchronized (METHOD_RESOLVER_CACHE) {
-      WeakHashMap<Integer, WeakReference<Object[]>> map = METHOD_RESOLVER_CACHE.get(cls);
-      if (map == null) {
-        METHOD_RESOLVER_CACHE.put(cls, map = new WeakHashMap<Integer, WeakReference<Object[]>>());
-      }
-      map.put(property, new WeakReference<Object[]>(new Object[]{member, member.getParameterTypes()}));
+			WeakHashMap<Integer,WeakReference<Object[]>> map = METHOD_RESOLVER_CACHE.computeIfAbsent(cls,
+					k->new WeakHashMap<Integer,WeakReference<Object[]>>());
+			map.put(property, new WeakReference<Object[]>(new Object[]{member, member.getParameterTypes()}));
     }
   }
 
-  private static Object[] checkMethodCache(Class cls, Integer property) {
+  private static Object @Nullable [] checkMethodCache(Class cls, Integer property) {
     Map<Integer, WeakReference<Object[]>> map = METHOD_RESOLVER_CACHE.get(cls);
     if (map != null) {
       WeakReference<Object[]> ref = map.get(property);
@@ -618,7 +633,7 @@ public class PropertyAccessor {
               Class c = Class.forName(member.getDeclaringClass().getName() + "$" + property);
 
               throw new CompileException("name collision between innerclass: " + c.getCanonicalName()
-                  + "; and bean accessor: " + property + " (" + member.toString() + ")", this.property, this.st);
+                  + "; and bean accessor: " + property + " (" + member + ")", this.property, this.st);
             }
             catch (ClassNotFoundException e2) {
               //fallthru
@@ -633,7 +648,7 @@ public class PropertyAccessor {
       }
       else if (ctx instanceof Map && (((Map) ctx).containsKey(property) || nullHandle)) {
         if (ctx instanceof Proto.ProtoInstance) {
-          return ((Proto.ProtoInstance) ctx).get(property).call(null, thisReference, variableFactory, EMPTY_OBJ_ARR);
+          return ((Proto.ProtoInstance) ctx).get(property).call(null, thisReference, variableFactory, EMPTY_OBJ);
         }
         return ((Map) ctx).get(property);
       }
@@ -644,9 +659,8 @@ public class PropertyAccessor {
         Class c = (Class) ctx;
         for (Method m : c.getMethods()) {
           if (property.equals(m.getName())) {
-            if (pCtx!=null&& pCtx.getParserConfiguration()!=null?pCtx.getParserConfiguration().isAllowNakedMethCall():MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
-              return m.invoke(ctx, EMPTY_OBJ_ARR);
-            }
+            if (pCtx!=null&& pCtx.getParserConfiguration()!=null?pCtx.getParserConfiguration().isAllowNakedMethCall():MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL)
+              	return m.invoke(ctx, EMPTY_OBJ);
             return m;
           }
         }
@@ -856,7 +870,6 @@ public class PropertyAccessor {
    * @param name -
    * @return -
    */
-  @SuppressWarnings({"unchecked"})
   private Object getMethod(Object ctx, String name) {
     int _start = cursor;
 
@@ -867,8 +880,8 @@ public class PropertyAccessor {
     cursor++;
 
     Object[] args;
-    if (tk.length() == 0) {
-      args = ParseTools.EMPTY_OBJ_ARR;
+    if (tk.length() == 0){
+      args = EMPTY_OBJ;
     }
     else {
       List<char[]> subtokens = parseParameterList(tk.toCharArray(), 0, -1);
@@ -985,7 +998,7 @@ public class PropertyAccessor {
 //      System.out.println("{ " + new String(property) + " }");
 
       throw new PropertyAccessException("unable to resolve method: "
-          + cls.getName() + "." + name + "(" + errorBuild.toString() + ") [arglength=" + args.length + "]"
+          + cls.getName() + "." + name + "(" + errorBuild + ") [arglength=" + args.length + "]"
           , property, st, pCtx);
     }
     else {
@@ -1032,7 +1045,7 @@ public class PropertyAccessor {
    *
    * @return - Field, Method or Class instance.
    */
-  protected Object tryStaticAccess() {
+  protected @Nullable Object tryStaticAccess() {
     int begin = cursor;
     try {
       /**

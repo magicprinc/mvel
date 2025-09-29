@@ -18,6 +18,7 @@
 
 package org.mvel2.util;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.ParserContext;
 import org.mvel2.compiler.PropertyVerifier;
 
@@ -27,6 +28,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static java.lang.String.valueOf;
 import static java.lang.reflect.Modifier.PUBLIC;
@@ -35,9 +37,10 @@ import static java.lang.reflect.Modifier.isPublic;
 import static org.mvel2.DataConversion.canConvert;
 import static org.mvel2.util.ParseTools.boxPrimitive;
 
-public class PropertyTools {
+/// @see ArrayTools
+public final class PropertyTools {
 
-  public static boolean isEmpty (Object o) {
+  public static boolean isEmpty (@Nullable Object o) {
 		if (o instanceof Object[] a){
 			return a.length == 0 ||
 					(a.length == 1 && (a == a[0] || isEmpty(a[0])));
@@ -53,12 +56,35 @@ public class PropertyTools {
 					|| "null".equals(s);
   }
 
-  public static Method getSetter(Class clazz, String property) {
+	public static boolean isEmpty (@Nullable Collection<?> c) {
+		return c == null || c.isEmpty();
+	}
+
+	public static boolean isEmpty (@Nullable Map<?,?> m) {
+		return m == null || m.isEmpty();
+	}
+
+	public static boolean isEmpty (@Nullable Object @Nullable [] a) {
+		return a == null || a.length <= 0;
+	}
+
+	public static boolean isEmpty (char @Nullable [] a) {
+		return a == null || a.length <= 0;
+	}
+
+	public static boolean isEmpty (@Nullable CharSequence s) {
+		return s == null || s.length() <= 0 || s.equals("null");
+	}
+
+
+	public static @Nullable Method getSetter (Class<?> clazz, String property) {
     property = ReflectionUtil.getSetter(property);
 
-    for (Method meth : clazz.getMethods()) {
-      if ((meth.getModifiers() & PUBLIC) != 0 && meth.getParameterTypes().length == 1
-          && property.equals(meth.getName())) {
+    for (Method meth : clazz.getMethods()){
+      if ((meth.getModifiers() & PUBLIC) != 0
+				&& meth.getParameterTypes().length == 1
+        && Objects.equals(property, meth.getName())
+			){
         return meth;
       }
     }
@@ -66,14 +92,16 @@ public class PropertyTools {
     return null;
   }
 
-  public static Method getSetter(Class clazz, String property, Class type) {
-    String simple = "set" + property;
+  public static @Nullable Method getSetter (Class clazz, String property, Class type) {
+    String simple = "set"+ property;
     property = ReflectionUtil.getSetter(property);
 
-    for (Method meth : clazz.getMethods()) {
-      if ((meth.getModifiers() & PUBLIC) != 0 && meth.getParameterTypes().length == 1 &&
-          (property.equals(meth.getName()) || simple.equals(meth.getName()))
-          && (type == null || canConvert(meth.getParameterTypes()[0], type))) {
+    for (Method meth : clazz.getMethods()){
+      if ((meth.getModifiers() & PUBLIC) != 0
+				&& meth.getParameterTypes().length == 1
+				&& (property.equals(meth.getName()) || simple.equals(meth.getName()))
+         && (type == null || canConvert(meth.getParameterTypes()[0], type))
+			){
         return meth;
       }
     }
@@ -92,7 +120,7 @@ public class PropertyTools {
         field.getType().isAssignableFrom(meth.getParameterTypes()[0]);
   }
 
-  public static Method getGetter(Class clazz, String property) {
+  public static @Nullable Method getGetter(Class clazz, String property) {
     String simple = "get" + property;
     String simpleIsGet = "is" + property;
     String isGet = ReflectionUtil.getIsGetter(property);
@@ -114,12 +142,17 @@ public class PropertyTools {
     }
 
     for (Method meth : clazz.getMethods()) {
-      if ((meth.getModifiers() & PUBLIC) != 0 && (meth.getModifiers() & STATIC) == 0 && meth.getParameterTypes().length == 0
-          && (getter.equals(meth.getName()) || property.equals(meth.getName()) || ((isGet.equals(meth.getName()) || simpleIsGet.equals(meth.getName())) && meth.getReturnType() == boolean.class)
-          || simple.equals(meth.getName()))) {
-        if (candidate == null || isPreferredGetter(candidate, meth, getterPriorityMap)) {
-          candidate = meth;
-        }
+      if ((meth.getModifiers() & PUBLIC) != 0
+				&& (meth.getModifiers() & STATIC) == 0
+				&& meth.getParameterTypes().length == 0
+				&& (getter.equals(meth.getName())
+					|| property.equals(meth.getName())
+					|| ((isGet.equals(meth.getName()) || simpleIsGet.equals(meth.getName())) && meth.getReturnType() == boolean.class)
+          || simple.equals(meth.getName())
+				)
+			){
+        if (candidate == null || isPreferredGetter(candidate, meth, getterPriorityMap))
+          	candidate = meth;
       }
     }
     return candidate;
@@ -141,7 +174,7 @@ public class PropertyTools {
     return new PropertyVerifier(property, ctx, clazz).analyze();
   }
 
-  public static Member getFieldOrAccessor(Class clazz, String property) {
+  public static @Nullable Member getFieldOrAccessor(Class clazz, String property) {
     for (Field f : clazz.getFields()) {
       if (property.equals(f.getName())) {
         if ((f.getModifiers() & PUBLIC) != 0) return f;
@@ -151,7 +184,7 @@ public class PropertyTools {
     return getGetter(clazz, property);
   }
 
-  public static Member getFieldOrWriteAccessor(Class clazz, String property) {
+  public static @Nullable Member getFieldOrWriteAccessor(Class clazz, String property) {
     Field field;
     try {
       if ((field = clazz.getField(property)) != null &&
@@ -171,9 +204,8 @@ public class PropertyTools {
 
   public static Member getFieldOrWriteAccessor(Class clazz, String property, Class type) {
     for (Field f : clazz.getFields()) {
-      if (property.equals(f.getName()) && (type == null || canConvert(f.getType(), type))) {
-        return f;
-      }
+      if (property.equals(f.getName()) && (type == null || canConvert(f.getType(), type)))
+        	return f;
     }
 
     return getSetter(clazz, property, type);
@@ -191,8 +223,10 @@ public class PropertyTools {
       return ((Map) toCompare).containsKey(testValue);
     else if (toCompare.getClass().isArray()) {
       for (Object o : ((Object[]) toCompare)) {
-        if (testValue == null && o == null) return true;
-        else if (o != null && o.equals(testValue)) return true;
+        if (testValue == null && o == null)
+						return true;
+        else if (o != null && o.equals(testValue))
+						return true;
       }
     }
     return false;

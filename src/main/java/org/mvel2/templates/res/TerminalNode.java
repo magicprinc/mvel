@@ -18,9 +18,9 @@
 
 package org.mvel2.templates.res;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 
 public class TerminalNode extends Node {
   public TerminalNode() {
@@ -31,11 +31,13 @@ public class TerminalNode extends Node {
     this.end = end;
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
+  @Override
+	public @Nullable Object eval(TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
     return next != null ? next.eval(runtime, appender, ctx, factory) : null;
   }
 
-  public boolean demarcate(Node terminatingNode, char[] template) {
+  @Override
+	public boolean demarcate(Node terminatingNode, char[] template) {
     return false;
   }
 }

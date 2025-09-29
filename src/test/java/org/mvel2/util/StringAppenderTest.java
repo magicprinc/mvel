@@ -4,14 +4,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class StringAppenderTest {
-
-  @Test
-  public void testCharConstructor() {
-    final StringAppender stringAppender = new StringAppender('a');
-    Assert.assertEquals("a", stringAppender.toString());
-    // This looks to be exhibiting a potential bug, shouldn't this return "a"?
-  }
-
   @Test
   public void testAppendNull() {
     final StringAppender stringAppender = new StringAppender("a");
@@ -21,20 +13,12 @@ public class StringAppenderTest {
   }
 
   @Test
-  public void testAppendByteArr() {
-    final StringAppender stringAppender = new StringAppender("a");
-    stringAppender.append("b".getBytes());
-    stringAppender.append("c".getBytes());
-    Assert.assertEquals("abc", stringAppender.toString());
+  public void testAppendByteArrSubSequence() {
+    var stringAppender = new StringAppender("a");
+    stringAppender.append("bcd", 1, 2);
+    stringAppender.append("e", 1, 0);// len=0
+    Assert.assertEquals("acd", stringAppender.toString());
   }
-
-//  @Test
-//  public void testAppendByteArrSubSequence() {
-//    var stringAppender = new StringAppender("a");
-//    stringAppender.append("bcd".getBytes(), 1, 2);
-//    stringAppender.append("e".getBytes(), 1, 0);
-//    Assert.assertEquals("acd", stringAppender.toString());
-//  }
 
   @Test
   public void testAppendCharArrSubSequence() {

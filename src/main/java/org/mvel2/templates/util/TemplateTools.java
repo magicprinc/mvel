@@ -18,6 +18,7 @@
 
 package org.mvel2.templates.util;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.templates.TemplateError;
 import org.mvel2.templates.res.Node;
 import org.mvel2.templates.res.TerminalNode;
@@ -28,7 +29,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.Arrays;
 import java.util.HexFormat;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static java.nio.charset.StandardCharsets.*;
 import static org.mvel2.util.ParseTools.balancedCapture;
@@ -102,18 +106,42 @@ public final class TemplateTools {
 		try {
 			return new String(b, UTF_8);
 		} catch (Throwable e){
-			System.Logger log = System.getLogger(TemplateTools.class.getName());
-
-			log.log(System.Logger.Level.ERROR, "asStr: failed to convert byte[] to UTF-8 str: (%s) %s", b.length, HexFormat.of().formatHex(b));
+			var log = Logger.getLogger(TemplateTools.class.getName());
+			log.log(Level.WARNING, "asStr: failed to convert byte[] to UTF-8 str: (%s) %s".formatted(b.length, HexFormat.of().formatHex(b)), e);
 			return new String(b, 0/*hiByte*/);// fallback to Latin1
 		}
 	}
 
-	public static Appendable append (Appendable to, Object data) throws UncheckedIOException {
+	public static Appendable append (Appendable to, @Nullable Object data) throws UncheckedIOException {
 		try {
 			return to.append(String.valueOf(data));
+		} catch (NullPointerException ignore){
+			return null;
 		} catch (IOException e){
 			throw new UncheckedIOException("failed to write to Appendable: "+ to +", data: "+ data, e);
+		}
+	}
+
+	/// @see java.util.Objects#toString(Object, String)
+	public static String str (@Nullable Object data) {
+		return data != null ? data.toString() : "";
+	}
+	public static String str (@Nullable Object @Nullable [] data) {
+		return data != null ? Arrays.toString(data) : "";
+	}
+	public static String str (char @Nullable [] data) {
+		return data != null ? Arrays.toString(data) : "";
+	}
+
+
+	public static void close (@Nullable AutoCloseable closeable) {
+		if (closeable == null)
+				return;
+		try {
+			closeable.close();
+		} catch (Throwable e){
+			var log = Logger.getLogger(TemplateTools.class.getName());
+			log.log(Level.WARNING, "close: failed to close AutoCloseable (%s) %s".formatted(closeable.getClass().getName(), closeable), e);
 		}
 	}
 }

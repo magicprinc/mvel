@@ -21,14 +21,13 @@ package org.mvel2.templates.res;
 import org.mvel2.MVEL;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 
+import static org.mvel2.templates.util.TemplateTools.append;
 import static org.mvel2.templates.util.TemplateTools.captureToEOS;
 
 public class NamedIncludeNode extends Node {
   //  private char[] includeExpression;
   //  private char[] preExpression;
-
   int includeStart;
   int includeOffset;
 
@@ -55,25 +54,24 @@ public class NamedIncludeNode extends Node {
 //        if (mark != contents.length) this.preExpression = subset(contents, ++mark, contents.length - mark);
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
-    if (preOffset != 0) {
-      MVEL.eval(contents, preStart, preOffset, ctx, factory);
-    }
+  @Override
+	public Object eval(TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
+    if (preOffset != 0)
+      	MVEL.eval(contents, preStart, preOffset, ctx, factory);
 
-    if (next != null) {
+    if (next != null)
       return next.eval(runtime,
-          appender.append(String.valueOf(TemplateRuntime.execute(runtime
+          append(appender, TemplateRuntime.execute(runtime
               .getNamedTemplateRegistry().getNamedTemplate(MVEL.eval(contents, includeStart, includeOffset,
-                  ctx, factory, String.class)), ctx, factory))), ctx, factory);
-    }
-    else {
-      return appender.append(String.valueOf(TemplateRuntime.execute(runtime.getNamedTemplateRegistry()
+                  ctx, factory, String.class)), ctx, factory)), ctx, factory);
+    else
+      return append(appender, TemplateRuntime.execute(runtime.getNamedTemplateRegistry()
           .getNamedTemplate(MVEL.eval(contents, includeStart, includeOffset, ctx, factory, String.class)),
-          ctx, factory)));
-    }
+          ctx, factory));
   }
 
-  public boolean demarcate(Node terminatingNode, char[] template) {
+  @Override
+	public boolean demarcate(Node terminatingNode, char[] template) {
     return false;
   }
 }

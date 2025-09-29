@@ -1,9 +1,6 @@
-package org.mvel2.tests.core;
+package org.mvel2.templates;
 
 import org.mvel2.integration.impl.ImmutableDefaultFactory;
-import org.mvel2.templates.CompiledTemplate;
-import org.mvel2.templates.TemplateCompiler;
-import org.mvel2.templates.TemplateRuntime;
 import org.mvel2.tests.BaseMvelTestCase;
 import org.mvel2.util.StringAppender;
 
@@ -19,8 +16,9 @@ public class MVELIncludeTest extends BaseMvelTestCase {
   private File file;
 
   @Override
-	public void setUp() {
-    file = new File("samples/scripts/accentTopLevel.mvel");
+	public void setUp() throws Exception {
+		super.setUp();
+		file = new File("samples/scripts/accentTopLevel.mvel");
   }
 
   /**
@@ -31,8 +29,8 @@ public class MVELIncludeTest extends BaseMvelTestCase {
   public void testEvalFile1() throws IOException {
     final CompiledTemplate template = TemplateCompiler.compileTemplate(file);
 
-    final String tr = (String) new TemplateRuntime(template.getTemplate(), null, template.getRoot(), "./samples/scripts/")
-    	.execute(new StringAppender(), new HashMap<String, String>(), new ImmutableDefaultFactory());
+    String tr = (String) new TemplateRuntime(template.getTemplate(), null, template.getRoot(), "./samples/scripts/")
+    		.execute(new StringAppender(), new HashMap<String, String>(), new ImmutableDefaultFactory());
     assertEquals("Hello mister Gaël Périé", tr);
   }
 

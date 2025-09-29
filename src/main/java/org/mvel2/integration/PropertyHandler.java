@@ -18,6 +18,8 @@
 
 package org.mvel2.integration;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * This interface allows an external property handler to resolve a property against the provided context.
  *
@@ -32,7 +34,7 @@ public interface PropertyHandler {
    * @param variableFactory - the root variable factory provided by the runtime.
    * @return - the value of the property.
    */
-	Object getProperty (String name, Object contextObj, VariableResolverFactory variableFactory);
+	Object getProperty (String name, @Nullable Object contextObj, VariableResolverFactory variableFactory);
 
 
   /**

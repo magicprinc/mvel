@@ -18,6 +18,7 @@
 
 package org.mvel2.templates.res;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.CompileException;
 import org.mvel2.MVEL;
 import org.mvel2.integration.VariableResolverFactory;
@@ -25,7 +26,7 @@ import org.mvel2.integration.impl.MapVariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
 import org.mvel2.templates.TemplateRuntimeError;
 import org.mvel2.templates.util.ArrayIterator;
-import org.mvel2.templates.util.TemplateOutputStream;
+import org.mvel2.templates.util.CountIterator;
 import org.mvel2.util.ParseTools;
 
 import java.util.ArrayList;
@@ -33,13 +34,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import static org.mvel2.templates.util.TemplateTools.append;
+
 public class ForEachNode extends Node {
   public Node nestedNode;
 
   private String[] item;
   private String[] expression;
 
-  private char[] sepExpr;
+  private char @Nullable [] sepExpr;
 
   public ForEachNode(int begin, String name, char[] template, int start, int end) {
     super(begin, name, template, start, end);
@@ -54,7 +57,8 @@ public class ForEachNode extends Node {
     this.nestedNode = nestedNode;
   }
 
-  public boolean demarcate(Node terminatingnode, char[] template) {
+  @Override
+	public boolean demarcate(Node terminatingnode, char[] template) {
     nestedNode = next;
     next = terminus;
 
@@ -64,24 +68,27 @@ public class ForEachNode extends Node {
     return false;
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
+  public Object eval(TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
     Iterator[] iters = new Iterator[item.length];
 
     Object o;
     for (int i = 0; i < iters.length; i++) {
-      if ((o = MVEL.eval(expression[i], ctx, factory)) instanceof Iterable) {
-        iters[i] = ((Iterable) o).iterator();
+      if ((o = MVEL.eval(expression[i], ctx, factory)) instanceof Iterable<?> it){
+        iters[i] = it.iterator();
       }
-      else if (o instanceof Object[]) {
-        iters[i] = new ArrayIterator((Object[]) o);
+      else if (o instanceof Object[] a){
+        iters[i] = new ArrayIterator(a);
       }
-      else {
+			else if (o instanceof Integer n){
+				iters[i] = new CountIterator(n);
+			}
+			else {
         throw new TemplateRuntimeError("cannot iterate object type: " + o.getClass().getName());
       }
     }
 
     Map<String, Object> locals = new HashMap<String, Object>();
-    MapVariableResolverFactory localFactory = new MapVariableResolverFactory(locals, factory);
+    var localFactory = new MapVariableResolverFactory(locals, factory);
 
     int iterate = iters.length;
 
@@ -100,8 +107,8 @@ public class ForEachNode extends Node {
 
         if (sepExpr != null) {
           for (Iterator it : iters) {
-            if (it.hasNext()) {
-              appender.append(String.valueOf(MVEL.eval(sepExpr, ctx, factory)));
+						if (it.hasNext()) {
+              append(appender, MVEL.eval(sepExpr, ctx, factory));
               break;
             }
           }

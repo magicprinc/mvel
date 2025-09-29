@@ -46,7 +46,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static org.mvel2.util.ArrayTools.isEmpty;
+import static org.mvel2.util.PropertyTools.isEmpty;
 
 /**
  * The <tt>ParserContext</tt> is the main environment object used for sharing state throughout the entire
@@ -503,9 +503,10 @@ public class ParserContext implements Serializable {
   public void addVariable(String name, Class type, boolean failIfNewAssignment) {
     initializeTables();
     if (variables.containsKey(name) && failIfNewAssignment)
-      throw new RuntimeException("statically-typed variable already defined in scope: " + name);
+      	throw new RuntimeException("statically-typed variable already defined in scope: " + name);
 
-    if (type == null) type = Object.class;
+    if (type == null)
+				type = Object.class;
 
     variables.put(name, type);
     makeVisible(name);
@@ -522,9 +523,8 @@ public class ParserContext implements Serializable {
   public void addVariables(Map<String, Class> variables) {
     if (variables == null) return;
     initializeTables();
-    for (Map.Entry<String, Class> entry : variables.entrySet()) {
-      addVariable(entry.getKey(), entry.getValue());
-    }
+    for (var entry : variables.entrySet())
+      	addVariable(entry.getKey(), entry.getValue());
   }
 
   public void addInput(String name, Class type) {
@@ -539,37 +539,31 @@ public class ParserContext implements Serializable {
     if (type == null) type = Object.class;
     addInput(name, type);
 
-    if (this.typeParameters == null) {
-      this.typeParameters = new LinkedHashMap<String, Map<String, Type>>();
-    }
-    if (this.typeParameters.get(name) == null) {
-      this.typeParameters.put(name, new LinkedHashMap<String, Type>());
-    }
+    if (this.typeParameters == null)
+      	this.typeParameters = new LinkedHashMap<String, Map<String, Type>>();
+    if (this.typeParameters.get(name) == null)
+      	this.typeParameters.put(name, new LinkedHashMap<String, Type>());
 
     Map<String, Type> t = this.typeParameters.get(name);
 
-    if (typeParameters.length != type.getTypeParameters().length) {
-      throw new RuntimeException("wrong number of type parameters for: " + type.getName());
-    }
+    if (typeParameters.length != type.getTypeParameters().length)
+      	throw MVELParseException.fmt("wrong number of type parameters for: %s %d != %d", type.getName(), typeParameters.length, type.getTypeParameters().length);
 
     TypeVariable[] tvs = type.getTypeParameters();
 
-    for (int i = 0; i < typeParameters.length; i++) {
+    for (int i = 0; i < typeParameters.length; i++)
       t.put(tvs[i].getName(), typeParameters[i]);
-    }
   }
 
   public void addInputs(Map<String, Class> inputs) {
     if (inputs == null) return;
-    for (Map.Entry<String, Class> entry : inputs.entrySet()) {
-      addInput(entry.getKey(), entry.getValue());
-    }
+    for (var entry : inputs.entrySet())
+      	addInput(entry.getKey(), entry.getValue());
   }
 
   public void processTables() {
-    for (String name : variables.keySet()) {
-      inputs.remove(name);
-    }
+    for (String name : variables.keySet())
+      	inputs.remove(name);
   }
 
   public Map<String, Class> getInputs() {
@@ -594,7 +588,8 @@ public class ParserContext implements Serializable {
       for (ErrorDetail detail : errorList) {
         if (detail.getMessage().equals(errorDetail.getMessage())
             && detail.getColumn() == errorDetail.getColumn()
-            && detail.getLineNumber() == errorDetail.getLineNumber()) {
+            && detail.getLineNumber() == errorDetail.getLineNumber()
+				){
           return;
         }
       }
@@ -693,7 +688,7 @@ public class ParserContext implements Serializable {
         addImport(entry.getKey(), (MethodStub) val);
       }
       else {
-        throw new RuntimeException("invalid element in imports map: " + entry.getKey() + " (" + val + ")");
+        throw new MVELParseException("invalid element in imports map: " + entry.getKey() + " (" + val + ")");
       }
     }
   }
@@ -1033,9 +1028,8 @@ public class ParserContext implements Serializable {
   }
 
   public Map<String, Class> getReturnTypeCache() {
-    if (returnTypeCache == null) {
-      returnTypeCache = new HashMap<String, Class>();
-    }
+    if (returnTypeCache == null)
+      	returnTypeCache = new HashMap<String, Class>();
     return returnTypeCache;
   }
 

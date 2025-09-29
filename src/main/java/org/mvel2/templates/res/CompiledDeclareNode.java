@@ -18,19 +18,19 @@
 
 package org.mvel2.templates.res;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.CompiledTemplate;
 import org.mvel2.templates.SimpleTemplateRegistry;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 
 import java.io.Serializable;
 
 public class CompiledDeclareNode extends Node {
   private Node nestedNode;
-  private Serializable ce;
+  private final Serializable ce;
 
   public CompiledDeclareNode(int begin, String name, char[] template, int start, int end, ParserContext context) {
     this.begin = begin;
@@ -43,10 +43,10 @@ public class CompiledDeclareNode extends Node {
     //  ce = MVEL.compileExpression(this.contents = subset(template, this.cStart = start, (this.end = this.cEnd = end) - start - 1), context);
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
-    if (runtime.getNamedTemplateRegistry() == null) {
-      runtime.setNamedTemplateRegistry(new SimpleTemplateRegistry());
-    }
+  @Override
+	public @Nullable Object eval (TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
+    if (runtime.getNamedTemplateRegistry() == null)
+      	runtime.setNamedTemplateRegistry(new SimpleTemplateRegistry());
 
     runtime.getNamedTemplateRegistry()
         .addNamedTemplate(MVEL.executeExpression(ce, ctx, factory, String.class),
@@ -55,7 +55,8 @@ public class CompiledDeclareNode extends Node {
     return next != null ? next.eval(runtime, appender, ctx, factory) : null;
   }
 
-  public boolean demarcate(Node terminatingNode, char[] template) {
+  @Override
+	public boolean demarcate(Node terminatingNode, char[] template) {
     Node n = nestedNode = next;
 
     while (n.getNext() != null) n = n.next;

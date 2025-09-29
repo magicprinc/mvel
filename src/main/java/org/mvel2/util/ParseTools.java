@@ -18,6 +18,7 @@
 
 package org.mvel2.util;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.CompileException;
 import org.mvel2.DataTypes;
 import org.mvel2.MVEL;
@@ -50,7 +51,7 @@ import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -66,6 +67,7 @@ import static java.lang.Double.parseDouble;
 import static java.lang.String.valueOf;
 import static java.lang.System.arraycopy;
 import static java.lang.Thread.currentThread;
+import static java.nio.charset.StandardCharsets.*;
 import static org.mvel2.DataConversion.canConvert;
 import static org.mvel2.DataTypes.DOUBLE;
 import static org.mvel2.DataTypes.INTEGER;
@@ -75,10 +77,8 @@ import static org.mvel2.compiler.AbstractParser.LITERALS;
 import static org.mvel2.integration.ResolverTools.appendFactory;
 
 
-@SuppressWarnings({"ManualArrayCopy"})
+@SuppressWarnings({"ManualArrayCopy", "rawtypes"})
 public class ParseTools {
-  public static final Object[] EMPTY_OBJ_ARR = new Object[0];
-  public static final Class[] EMPTY_CLS_ARR = new Class[0];
 
   public static List<char[]> parseMethodOrConstructor(char[] parm) {
     int start = -1;
@@ -159,22 +159,22 @@ public class ParseTools {
       }
     }
 
-    return list.toArray(new String[list.size()]);
+    return list.toArray(ArrayTools.EMPTY_STR);
   }
 
 
   public static List<char[]> parseParameterList(char[] parm, int offset, int length) {
-    List<char[]> list = new ArrayList<char[]>();
+    List<char[]> list = new ArrayList<>();
 
-    if (length == -1)
-      length = parm.length;
+    if (length < 0)
+      	length = parm.length;
 
     int start = offset;
     int i = offset;
     int end = i + length;
 
-    for (; i < end; i++) {
-      switch (parm[i]) {
+    for (; i < end; i++){
+      switch (parm[i]){
         case '(':
         case '[':
         case '{':
@@ -192,7 +192,7 @@ public class ParseTools {
         case ',':
           if (i > start) {
             while (isWhitespace(parm[start]))
-              start++;
+              	start++;
 
             list.add(subsetTrimmed(parm, start, i - start));
           }
@@ -207,34 +207,31 @@ public class ParseTools {
     if (start < (length + offset) && i > start) {
       char[] s = subsetTrimmed(parm, start, i - start);
       if (s.length > 0)
-        list.add(s);
+        	list.add(s);
     }
-    else if (list.size() == 0) {
+    else if (list.isEmpty()){
       char[] s = subsetTrimmed(parm, start, length);
       if (s.length > 0)
-        list.add(s);
+        	list.add(s);
     }
 
     return list;
   }
 
-  public static Method getBestCandidate(Object[] arguments, String method, Class decl, Method[] methods, boolean requireExact) {
+  public static @Nullable Method getBestCandidate(Object[] arguments, String method, Class decl, Method[] methods, boolean requireExact) {
     Class[] targetParms = new Class[arguments.length];
-    for (int i = 0; i != arguments.length; i++) {
-      targetParms[i] = arguments[i] != null ? arguments[i].getClass() : null;
-    }
+    for (int i = 0; i != arguments.length; i++)
+      	targetParms[i] = arguments[i] != null ? arguments[i].getClass() : null;
     return getBestCandidate(targetParms, method, decl, methods, requireExact);
   }
 
-  public static Method getBestCandidate(Class[] arguments, String method, Class decl, Method[] methods, boolean requireExact) {
+  public static @Nullable Method getBestCandidate(Class[] arguments, String method, Class decl, Method[] methods, boolean requireExact) {
     return getBestCandidate(arguments, method, decl, methods, requireExact, false);
   }
 
-  public static Method getBestCandidate(Class[] arguments, String method, Class decl, Method[] methods, boolean requireExact, boolean classTarget) {
-
-    if (methods.length == 0) {
-      return null;
-    }
+  public static @Nullable Method getBestCandidate(Class[] arguments, String method, Class decl, Method[] methods, boolean requireExact, boolean classTarget) {
+    if (methods.length <= 0)
+      	return null;
 
     Class<?>[] parmTypes;
     Method bestCandidate = null;
@@ -243,7 +240,8 @@ public class ParseTools {
 
     do {
       for (Method meth : methods) {
-        if (classTarget && !Modifier.isStatic(meth.getModifiers())) continue;
+        if (classTarget && !Modifier.isStatic(meth.getModifiers()))
+						continue;
 
         if (method.equals(meth.getName())) {
           parmTypes = meth.getParameterTypes();
@@ -255,9 +253,8 @@ public class ParseTools {
           }
 
           boolean isVarArgs = meth.isVarArgs();
-          if ( isArgsNumberNotCompatible( arguments, parmTypes, isVarArgs ) ) {
-            continue;
-          }
+          if ( isArgsNumberNotCompatible( arguments, parmTypes, isVarArgs ) )
+            	continue;
 
           int score = getMethodScore(arguments, requireExact, parmTypes, isVarArgs);
           if (score != 0) {
@@ -266,17 +263,15 @@ public class ParseTools {
               bestScore = score;
             }
             else if (score == bestScore) {
-              if ((isMoreSpecialized(meth, bestCandidate) || isMorePreciseForBigDecimal(meth, bestCandidate, arguments))&& !isVarArgs) {
-                bestCandidate = meth;
-              }
+              if ((isMoreSpecialized(meth, bestCandidate) || isMorePreciseForBigDecimal(meth, bestCandidate, arguments))&& !isVarArgs)
+                	bestCandidate = meth;
             }
           }
         }
       }
 
-      if (bestCandidate != null) {
-        break;
-      }
+      if (bestCandidate != null)
+        	break;
 
       if (!retry && decl.isInterface()) {
         Method[] objMethods = Object.class.getMethods();
@@ -326,9 +321,8 @@ public class ParseTools {
   }
 
   private static int comparePrecision(Class<?> numeric1, Class<?> numeric2) {
-    if (numeric1 == numeric2) {
-      return 0;
-    }
+    if (numeric1 == numeric2)
+      	return 0;
     if (numeric1 == BigDecimal.class) {
         return 1;
     } else if ((numeric1 == double.class) && (numeric2 == float.class || numeric2 == long.class || numeric2 == int.class || numeric2 == short.class || numeric2 == BigInteger.class)) {
@@ -352,9 +346,9 @@ public class ParseTools {
     for (int i = 0; i != arguments.length; i++) {
       Class<?> actualParamType;
       if (varArgs && i >= parmTypes.length - 1)
-        actualParamType = parmTypes[parmTypes.length - 1].getComponentType();
+        	actualParamType = parmTypes[parmTypes.length - 1].getComponentType();
       else
-        actualParamType = parmTypes[i];
+        	actualParamType = parmTypes[i];
 
       if (arguments[i] == null) {
         if (!actualParamType.isPrimitive()) {
@@ -411,9 +405,11 @@ public class ParseTools {
     if (parm.isInterface()) {
       Class[] iface = arg.getInterfaces();
       if (iface != null) {
-        for (Class c : iface) {
-          if (c == parm) return 1;
-          else if (parm.isAssignableFrom(c)) return scoreInterface(parm, arg.getSuperclass());
+        for (Class c : iface){
+          if (c == parm)
+							return 1;
+          else if (parm.isAssignableFrom(c))
+							return scoreInterface(parm, arg.getSuperclass());
         }
       }
     }
@@ -428,7 +424,8 @@ public class ParseTools {
         if (parameterTypes.length != args.length) continue;
 
         for (int i = 0; i < parameterTypes.length; i++) {
-          if (parameterTypes[i] != args[i]) continue outer;
+          if (parameterTypes[i] != args[i])
+							continue outer;
         }
         return meth;
       }
@@ -441,9 +438,8 @@ public class ParseTools {
   }
 
   public static Method getWidenedTarget(Class cls, Method method) {
-    if (Modifier.isStatic(method.getModifiers())) {
-      return method;
-    }
+    if (Modifier.isStatic(method.getModifiers()))
+      	return method;
 
     Method m = method, best = method;
     Class[] args = method.getParameterTypes();
@@ -452,20 +448,19 @@ public class ParseTools {
 
     Class currentCls = cls;
     while (currentCls != null) {
-      for (Class iface : currentCls.getInterfaces()) {
-        if ((m = getExactMatch(name, args, rt, iface)) != null) {
-          best = m;
-        }
+      for (Class<?> iface : currentCls.getInterfaces()) {
+        if ((m = getExactMatch(name, args, rt, iface)) != null)
+          	best = m;
       }
       currentCls = currentCls.getSuperclass();
     }
 
-    if (best != method) return best;
+    if (best != method)
+				return best;
 
     for (currentCls = cls; currentCls != null; currentCls = currentCls.getSuperclass()) {
-      if ((m = getExactMatch(name, args, rt, currentCls)) != null) {
-        best = m;
-      }
+      if ((m = getExactMatch(name, args, rt, currentCls)) != null)
+        	best = m;
     }
     return best;
   }
@@ -476,7 +471,7 @@ public class ParseTools {
   private static Class[] getConstructors(Constructor cns) {
     WeakReference<Class[]> ref = CONSTRUCTOR_PARMS_CACHE.get(cns);
     Class[] parms;
-    if (ref != null && (parms = ref.get()) != null) {
+    if (ref != null && (parms = ref.get()) != null){
       return parms;
     }
     else {
@@ -488,10 +483,9 @@ public class ParseTools {
   public static Constructor getBestConstructorCandidate(Object[] args, Class cls, boolean requireExact) {
     Class[] arguments = new Class[args.length];
 
-    for (int i = 0; i != args.length; i++) {
-      if (args[i] != null) {
-        arguments[i] = args[i].getClass();
-      }
+    for (int i = 0; i != args.length; i++){
+      if (args[i] != null)
+        	arguments[i] = args[i].getClass();
     }
 
     return getBestConstructorCandidate(arguments, cls, requireExact);
@@ -541,13 +535,10 @@ public class ParseTools {
   public static Class createClass(String className, ParserContext pCtx) throws ClassNotFoundException {
     ClassLoader classLoader = pCtx != null ? pCtx.getClassLoader() : currentThread().getContextClassLoader();
 
-    Map<String, WeakReference<Class>> cache = CLASS_RESOLVER_CACHE.get(classLoader);
+		Map<String,WeakReference<Class>> cache =CLASS_RESOLVER_CACHE.computeIfAbsent(classLoader,
+			k->Collections.synchronizedMap(new WeakHashMap<String,WeakReference<Class>>(10)));
 
-    if (cache == null) {
-      CLASS_RESOLVER_CACHE.put(classLoader, cache = Collections.synchronizedMap( new WeakHashMap<String, WeakReference<Class>>(10) ) );
-    }
-
-    WeakReference<Class> ref;
+		WeakReference<Class> ref;
     Class cls;
 
     if ((ref = cache.get(className)) != null && (cls = ref.get()) != null) {
@@ -990,52 +981,41 @@ public class ParseTools {
   }
 
   public static char[] subsetTrimmed(char[] array, int start, int length) {
-    if (length <= 0) {
-      return ArrayTools.EMPTY_CHAR;
-    }
+    if (length <= 0)
+      	return ArrayTools.EMPTY_CHAR;
 
-    int end = start + length;
-    while (end > 0 && isWhitespace(array[end - 1])) {
-      end--;
-    }
+    int end = Math.min(start + length, array.length);
+    while (end > start && isWhitespace(array[end - 1]))
+      	end--;
 
-    while (isWhitespace(array[start]) && start < end) {
-      start++;
-    }
+    while (isWhitespace(array[start]) && start < end)
+      	start++;
 
     length = end - start;
 
-    if (length == 0) {
-      return ArrayTools.EMPTY_CHAR;
-    }
+    if (length <= 0)
+      	return ArrayTools.EMPTY_CHAR;
 
     return subset(array, start, length);
   }
 
-  public static char[] subset(char[] array, int start, int length) {
+  public static char[] subset (char[] array, int start, int length) {
+    length = Math.min(length, array.length - start);
+		if (length <= 0)
+				return ArrayTools.EMPTY_CHAR;
 
+		var newArray = new char[length];
 
-    char[] newArray = new char[length];
-
-    for (int i = 0; i < newArray.length; i++) {
-      newArray[i] = array[i + start];
-    }
+		System.arraycopy(array, start, newArray, 0, length);
 
     return newArray;
   }
 
-  public static char[] subset(char[] array, int start) {
-    char[] newArray = new char[array.length - start];
-
-    for (int i = 0; i < newArray.length; i++) {
-      newArray[i] = array[i + start];
-    }
-
-    return newArray;
+  public static char[] subset (char[] array, int start) {
+    return subset(array, start, array.length - start);
   }
 
   private static final HashMap<Class, Integer> typeResolveMap = new HashMap<Class, Integer>();
-
   static {
     Map<Class, Integer> t = typeResolveMap;
     t.put(BigDecimal.class, DataTypes.BIG_DECIMAL);
@@ -1074,8 +1054,7 @@ public class ParseTools {
     else return __resolveType(o.getClass());
   }
 
-  private static final Map<Class, Integer> typeCodes = new HashMap<Class, Integer>(30, 0.5f);
-
+  private static final Map<Class, Integer> typeCodes = new HashMap<>(30, 0.5f);
   static {
     typeCodes.put(Integer.class, DataTypes.W_INTEGER);
     typeCodes.put(Double.class, DataTypes.W_DOUBLE);
@@ -1102,15 +1081,13 @@ public class ParseTools {
     typeCodes.put(BlankLiteral.class, DataTypes.EMPTY);
   }
 
-  public static int __resolveType(Class cls) {
+  public static int __resolveType (Class<?> cls) {
     Integer code = typeCodes.get(cls);
-    if (code == null) {
-      if (cls != null && Collection.class.isAssignableFrom(cls)) {
-        return DataTypes.COLLECTION;
-      }
-      else {
-        return DataTypes.OBJECT;
-      }
+    if (code == null){
+      if (cls != null && Collection.class.isAssignableFrom(cls))
+        	return DataTypes.COLLECTION;
+      else
+        	return DataTypes.OBJECT;
     }
     return code;
   }
@@ -1155,25 +1132,24 @@ public class ParseTools {
   }
 
 
-  public static Method determineActualTargetMethod(Method method) {
+  public static @Nullable Method determineActualTargetMethod(Method method) {
     return determineActualTargetMethod(method.getDeclaringClass(), method);
   }
 
-  private static Method determineActualTargetMethod(Class clazz, Method method) {
+	/**
+	 * Follow our way up the class heirarchy until we find the physical target method.
+	 */
+  private static @Nullable Method determineActualTargetMethod(Class clazz, Method method) {
     String name = method.getName();
-
-    /**
-     * Follow our way up the class heirarchy until we find the physical target method.
-     */
     for (Class cls : clazz.getInterfaces()) {
       for (Method meth : cls.getMethods()) {
-        if (meth.getParameterTypes().length == 0 && name.equals(meth.getName())) {
-          return meth;
-        }
+        if (meth.getParameterTypes().length == 0 && name.equals(meth.getName()))
+          	return meth;
       }
     }
 
-    return clazz.getSuperclass() != null ? determineActualTargetMethod(clazz.getSuperclass(), method) : null;
+    return clazz.getSuperclass() != null ? determineActualTargetMethod(clazz.getSuperclass(), method)
+				: null;
   }
 
   public static int captureToNextTokenJunction(char[] expr, int cursor, int end, ParserContext pCtx) {
@@ -1196,9 +1172,8 @@ public class ParseTools {
   }
 
   public static int nextNonBlank(char[] expr, int cursor) {
-    if ((cursor + 1) >= expr.length) {
-      throw new CompileException("unexpected end of statement", expr, cursor);
-    }
+    if ((cursor + 1) >= expr.length)
+      	throw new CompileException("unexpected end of statement", expr, cursor);
     int i = cursor;
     while (i != expr.length && isWhitespace(expr[i])) i++;
     return i;
@@ -1356,10 +1331,9 @@ public class ParseTools {
 
     if (type == term) {
       for (start++; start < end; start++) {
-        if (chars[start] == '\\') start = skipStringEscape(start);
-        if (chars[start] == type) {
-          return start;
-        }
+        if (chars[start] == '\\') start = start + 2;// skipStringEscape
+        if (chars[start] == type)
+          	return start;
       }
     }
     else {
@@ -1430,10 +1404,9 @@ public class ParseTools {
     }
 
     if (type == term) {
-      for (start++; start != end; start++) {
-        if (chars[start] == type) {
-          return start;
-        }
+      for (start++; start != end; start++){
+        if (chars[start] == type)
+          	return start;
       }
     }
     else {
@@ -1480,8 +1453,9 @@ public class ParseTools {
         else if (chars[start] == type) {
           depth++;
         }
-        else if (chars[start] == term && --depth == 0) {
-          if (pCtx != null) pCtx.incrementLineCount(lines);
+        else if (chars[start] == term && --depth == 0){
+          if (pCtx != null)
+							pCtx.incrementLineCount(lines);
           return start;
         }
       }
@@ -1501,20 +1475,19 @@ public class ParseTools {
 
   public static String handleStringEscapes(char[] input) {
     int escapes = 0;
-    for (int i = 0; i < input.length; i++) {
-      if (input[i] == '\\') {
-        escapes += handleEscapeSequence(input, ++i);
-      }
+    for (int i = 0; i < input.length; i++){
+      if (input[i] == '\\')
+        	escapes += handleEscapeSequence(input, ++i);
     }
 
-    if (escapes == 0) return new String(input);
+    if (escapes == 0)
+				return new String(input);
 
     char[] processedEscapeString = new char[input.length - escapes];
     int cursor = 0;
     for (char aName : input) {
-      if (aName != 0) {
-        processedEscapeString[cursor++] = aName;
-      }
+      if (aName != 0)
+        	processedEscapeString[cursor++] = aName;
     }
 
     return new String(processedEscapeString);
@@ -1609,8 +1582,7 @@ public class ParseTools {
                 MVEL.eval(new String(block, _st, _end - _st), ctx, factory);
               }
               else {
-                MVEL.eval(new StringBuilder(nestParm).append('.')
-                    .append(block, _st, _end - _st).toString(), ctx, factory);
+                MVEL.eval(nestParm +'.'+ String.valueOf(block, _st, _end - _st), ctx, factory);
               }
             }
             catch (CompileException e) {
@@ -1912,12 +1884,14 @@ public class ParseTools {
 
   public static int find(char[] c, int start, int offset, char find) {
     int length = start + offset;
-    for (int i = start; i < length; i++) if (c[i] == find) return i;
+    for (int i = start; i < length; i++)
+				if (c[i] == find) return i;
     return -1;
   }
 
   public static int findLast(char[] c, int start, int offset, char find) {
-    for (int i = start + offset; i >= start; i--) if (c[i] == find) return i;
+    for (int i = start + offset; i >= start; i--)
+				if (c[i] == find) return i;
     return -1;
   }
 
@@ -2109,7 +2083,7 @@ public class ParseTools {
   }
 
   public static FileWriter getDebugFileWriter() throws IOException {
-    return new FileWriter(new File(getDebuggingOutputFileName()), true);
+    return new FileWriter(getDebuggingOutputFileName(), true);
   }
 
   public static boolean isPrimitiveWrapper(Class clazz) {
@@ -2136,10 +2110,10 @@ public class ParseTools {
     return _optimizeTree(c._compile());
   }
 
+	/**
+	 * If there is only one token, and it's an identifier, we can optimize this as an accessor expression.
+	 */
   public static Serializable optimizeTree(final CompiledExpression compiled) {
-    /**
-     * If there is only one token, and it's an identifier, we can optimize this as an accessor expression.
-     */
     if (!compiled.isImportInjectionRequired() &&
         compiled.getParserConfiguration().isAllowBootstrapBypass() && compiled.isSingleNode()) {
 
@@ -2149,10 +2123,10 @@ public class ParseTools {
     return compiled;
   }
 
+	/**
+	 * If there is only one token, and it's an identifier, we can optimize this as an accessor expression.
+	 */
   private static Serializable _optimizeTree(final CompiledExpression compiled) {
-    /**
-     * If there is only one token, and it's an identifier, we can optimize this as an accessor expression.
-     */
     if (compiled.isSingleNode()) {
       ASTNode tk = compiled.getFirstNode();
 
@@ -2176,38 +2150,26 @@ public class ParseTools {
     return new String(n);
   }
 
-  public static char[] loadFromFile (File file) throws IOException {
-		if (!file.exists())
-			throw new FileNotFoundException("cannot find file: " + file.getName());
-
-		try (FileInputStream inStream = new FileInputStream(file)){
+  public static char[] loadFromFile (File file) throws FileNotFoundException, IOException {
+		try (var inStream = new FileInputStream(file)){
 			byte[] buf = inStream.readAllBytes();
-			String s = new String(buf, StandardCharsets.UTF_8);
+			String s = new String(buf, UTF_8);
 			return s.toCharArray();
-		} catch (FileNotFoundException e){
-			// this can't be thrown, we check for this explicitly.
 		}
-		return null;
   }
 
-  public static char[] loadFromFile (File file, String encoding) throws IOException {
-    if (!file.exists())
-      	throw new FileNotFoundException("cannot find file: " + file.getName());
-
+  public static char[] loadFromFile (File file, @Nullable Charset encoding) throws IOException {
 		try (FileInputStream inStream = new FileInputStream(file)){
 			byte[] buf = inStream.readAllBytes();
-			String s = new String(buf, encoding != null ? encoding : "UTF-8");
+			String s = new String(buf, encoding != null ? encoding : UTF_8);
 			return s.toCharArray();
-		} catch (FileNotFoundException e){
-			// this can't be thrown, we check for this explicitly.
 		}
-    return null;
   }
 
   public static Class forNameWithInner(String className, ClassLoader classLoader) throws ClassNotFoundException {
     try {
       return classLoader.loadClass( className );
-    } catch (ClassNotFoundException cnfe) {
+    } catch (ClassNotFoundException cnfe){
       return findInnerClass( className, classLoader, cnfe );
     }
   }
@@ -2220,9 +2182,5 @@ public class ParseTools {
       } catch (ClassNotFoundException e) { /* ignore */ }
     }
     throw cnfe;
-  }
-
-  private static int skipStringEscape(int cur) {
-    return cur + 2;
   }
 }

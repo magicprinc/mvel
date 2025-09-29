@@ -18,31 +18,31 @@
 
 package org.mvel2.sh.command.basic;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.sh.Command;
 import org.mvel2.sh.CommandException;
 import org.mvel2.sh.ShellSession;
-import org.mvel2.util.StringAppender;
 
 import java.util.Map;
 
 public class Set implements Command {
-  public Object execute(ShellSession session, String[] args) {
+  @Override
+	public @Nullable Object execute (ShellSession session, String[] args) {
 
     Map<String, String> env = session.getEnv();
 
     if (args.length == 0) {
-      for (String var : env.keySet()) {
-        System.out.println(var + " = " + env.get(var));
-      }
+      for (String var : env.keySet())
+        	System.out.println(var + " = " + env.get(var));
     }
     else if (args.length == 1) {
       throw new CommandException("incorrect number of parameters");
     }
     else {
-      StringAppender sbuf = new StringAppender();
-      for (int i = 1; i < args.length; i++) {
+      var sbuf = new StringBuilder(99);
+      for (int i = 1; i < args.length; i++){
         sbuf.append(args[i]);
-        if (i < args.length) sbuf.append(" ");
+				sbuf.append(' ');
       }
 
       env.put(args[0], sbuf.toString().trim());
@@ -52,11 +52,13 @@ public class Set implements Command {
   }
 
 
-  public String getDescription() {
+  @Override
+	public String getDescription() {
     return "sets an environment variable";
   }
 
-  public String getHelp() {
+  @Override
+	public @Nullable String getHelp() {
     return null;
   }
 }

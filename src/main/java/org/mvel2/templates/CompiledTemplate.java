@@ -23,27 +23,15 @@ import org.mvel2.templates.res.Node;
 import java.io.Serializable;
 
 public class CompiledTemplate implements Serializable {
-  private char[] template;
-  private Node root;
+  private final char[] template;
+  private final Node root;
 
   public CompiledTemplate(char[] template, Node root) {
     this.template = template;
     this.root = root;
   }
 
-  public char[] getTemplate() {
-    return template;
-  }
+  public char[] getTemplate(){ return template; }
 
-  public void setTemplate(char[] template) {
-    this.template = template;
-  }
-
-  public Node getRoot() {
-    return root;
-  }
-
-  public void setRoot(Node root) {
-    this.root = root;
-  }
+  public Node getRoot (){ return root; }
 }

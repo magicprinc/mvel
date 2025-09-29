@@ -18,12 +18,13 @@
 
 package org.mvel2.compiler;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.integration.VariableResolverFactory;
 
 import java.io.Serializable;
 
 public interface ExecutableStatement extends Accessor, Serializable, Cloneable {
-  public Object getValue(Object staticContext, VariableResolverFactory factory);
+  public Object getValue(@Nullable Object staticContext, @Nullable VariableResolverFactory factory);
 
   public void setKnownIngressType(Class type);
 

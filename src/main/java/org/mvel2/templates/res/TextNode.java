@@ -18,9 +18,11 @@
 
 package org.mvel2.templates.res;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
+
+import static org.mvel2.templates.util.TemplateTools.append;
 
 public class TextNode extends Node {
   public TextNode(int begin, int end) {
@@ -34,22 +36,25 @@ public class TextNode extends Node {
     this.next = next;
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
+  @Override
+	public @Nullable Object eval(TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
     int len = end - begin;
-    if (len != 0) {
-      appender.append(new String(runtime.getTemplate(), begin, len));
-    }
+    if (len != 0)
+      	append(appender, new String(runtime.getTemplate(), begin, len));
     return next != null ? next.eval(runtime, appender, ctx, factory) : null;
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     return "TextNode(" + begin + "," + end + ")";
   }
 
-  public boolean demarcate(Node terminatingNode, char[] template) {
+  @Override
+	public boolean demarcate(Node terminatingNode, char[] template) {
     return false;
   }
 
-  public void calculateContents(char[] template) {
+  @Override
+	public void calculateContents(char[] template) {
   }
 }

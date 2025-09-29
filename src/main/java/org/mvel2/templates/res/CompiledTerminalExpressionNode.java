@@ -22,12 +22,11 @@ import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 
 import java.io.Serializable;
 
 public class CompiledTerminalExpressionNode extends TerminalExpressionNode {
-  private Serializable ce;
+  private final Serializable ce;
 
   public CompiledTerminalExpressionNode(Node node, ParserContext context) {
     this.begin = node.begin;
@@ -35,11 +34,8 @@ public class CompiledTerminalExpressionNode extends TerminalExpressionNode {
     ce = MVEL.compileExpression(node.contents, node.cStart, node.cEnd - node.cStart, context);
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
+  @Override
+	public Object eval(TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
     return MVEL.executeExpression(ce, ctx, factory);
-  }
-
-  public boolean demarcate(Node terminatingNode, char[] template) {
-    return false;
   }
 }

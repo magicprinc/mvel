@@ -20,18 +20,20 @@ package org.mvel2.templates.res;
 
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 
 public class EndNode extends Node {
-  public Object eval(TemplateRuntime runtie, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
+  @Override
+	public Object eval (TemplateRuntime runtie, Appendable appender, Object ctx, VariableResolverFactory factory) {
     return appender.toString();
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     return "EndNode";
   }
 
-  public boolean demarcate(Node terminatingNode, char[] template) {
+  @Override
+	public boolean demarcate(Node terminatingNode, char[] template) {
     return false;
   }
 }

@@ -33,7 +33,7 @@ import static org.mvel2.util.ParseTools.repeatChar;
 public class CompileException extends RuntimeException {
   private char[] expr;
 
-  private int cursor = 0;
+  private int cursor;
   private int msgOffset = 0;
 
   private int lineNumber = 1;
@@ -50,8 +50,8 @@ public class CompileException extends RuntimeException {
     this.expr = expr;
     this.cursor = cursor;
 
-    if (!errors.isEmpty()) {
-      ErrorDetail detail = errors.iterator().next();
+    if (!errors.isEmpty()){
+      ErrorDetail detail = errors.getFirst();
       this.cursor = detail.getCursor();
       this.lineNumber = detail.getLineNumber();
       this.column = detail.getColumn();
@@ -64,7 +64,8 @@ public class CompileException extends RuntimeException {
     this.evaluationContext = evaluationContext;
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     return generateErrorMessage();
   }
 
@@ -123,32 +124,23 @@ public class CompileException extends RuntimeException {
       start -= 30;
     }
 
-    if (start < 0) {
-      start = 0;
-    }
+    if (start < 0)
+      	start = 0;
 
     String cs;
+    int firstCr, lastCr;
 
-    int firstCr;
-    int lastCr;
+		cs = copyValueOf(expr, start, end - start).trim();// !StringIndexOutOfBoundsException
 
-    try {
-      cs = copyValueOf(expr, start, end - start).trim();
-    }
-    catch (StringIndexOutOfBoundsException e) {
-      throw e;
-    }
-
-    int matchStart = -1;
+    int matchStart;
     int matchOffset = 0;
     String match = null;
 
     if (cursor < end) {
       matchStart = cursor;
       if (matchStart > 0) {
-        while (matchStart > 0 && !isWhitespace(expr[matchStart - 1])) {
-          matchStart--;
-        }
+        while (matchStart > 0 && !isWhitespace(expr[matchStart - 1]))
+          	matchStart--;
       }
 
       matchOffset = cursor - matchStart;
@@ -182,7 +174,7 @@ public class CompileException extends RuntimeException {
           cs = cs.substring(0, firstCr);
         }
         else if (firstCr < matchIndex) {
-          cs = cs.substring(firstCr + 1, cs.length());
+          cs = cs.substring(firstCr + 1);
         }
       }
       else if (firstCr < matchIndex) {
@@ -203,9 +195,8 @@ public class CompileException extends RuntimeException {
       msgOffset = cs.length() - (cs.length() - trimmed.length());
     }
 
-    if (msgOffset == 0 && matchOffset == 0) {
-      msgOffset = cursor;
-    }
+    if (msgOffset == 0 && matchOffset == 0)
+      	msgOffset = cursor;
 
     return trimmed;
   }
@@ -215,7 +206,7 @@ public class CompileException extends RuntimeException {
   }
 
   private String generateErrorMessage() {
-    StringAppender appender = new StringAppender().append("[Error: " + super.getMessage() + "]\n");
+    var appender = new StringAppender().append("[Error: ").append(super.getMessage()).append("]\n");
 
     int offset = appender.length();
 
@@ -233,25 +224,22 @@ public class CompileException extends RuntimeException {
 
     calcRowAndColumn();
 
-    if (evaluationContext != null) {
-      appender.append("\n").append("In ").append(evaluationContext);
-    } else if (lineNumber != -1) {
-      appender.append("\n")
-          .append("[Line: " + lineNumber + ", Column: " + (column) + "]");
-    }
+    if (evaluationContext != null)
+      	appender.append("\nIn ").append(String.valueOf(evaluationContext));
+    else if (lineNumber != -1)
+      	appender.append("\n[Line: ").append(Integer.toString(lineNumber))
+					.append(", Column: ").append(Integer.toString(column)).append("]");
     return appender.toString();
   }
 
-  public char[] getExpr() {
-    return expr;
-  }
+  public char[] getExpr (){ return expr; }
 
   public int getCursor() {
     return cursor;
   }
 
   public List<ErrorDetail> getErrors() {
-    return errors != null ? errors : Collections.<ErrorDetail>emptyList();
+    return errors != null ? errors : Collections.emptyList();
   }
 
   public void setErrors(List<ErrorDetail> errors) {

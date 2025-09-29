@@ -18,10 +18,10 @@
 
 package org.mvel2.templates.res;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.MVEL;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 
 public class CodeNode extends Node {
   public CodeNode() {
@@ -49,16 +49,19 @@ public class CodeNode extends Node {
     this.offset = end - start - 1;
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
+  @Override
+	public @Nullable Object eval (TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
     MVEL.eval(contents, start, offset, ctx, factory);
     return next != null ? next.eval(runtime, appender, ctx, factory) : null;
   }
 
-  public boolean demarcate(Node terminatingNode, char[] template) {
+  @Override
+	public boolean demarcate(Node terminatingNode, char[] template) {
     return false;
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     return "CodeNode:" + name + "{" + (contents == null ? "" : new String(contents)) + "} (start=" + begin + ";end=" + end + ")";
   }
 }

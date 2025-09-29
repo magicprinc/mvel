@@ -18,12 +18,13 @@
 
 package org.mvel2.templates.res;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.MVEL;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 
 import static java.lang.String.valueOf;
+import static org.mvel2.templates.util.TemplateTools.append;
 
 public class EvalNode extends Node {
   public EvalNode() {
@@ -50,17 +51,20 @@ public class EvalNode extends Node {
     this.next = next;
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
-    appender.append(String.valueOf(TemplateRuntime.eval(
-        valueOf(MVEL.eval(contents, cStart, cEnd - cStart, ctx, factory)), ctx, factory)));
+  @Override
+	public @Nullable Object eval (TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
+    append(appender, TemplateRuntime.eval(
+        valueOf(MVEL.eval(contents, cStart, cEnd - cStart, ctx, factory)), ctx, factory));
     return next != null ? next.eval(runtime, appender, ctx, factory) : null;
   }
 
-  public boolean demarcate(Node terminatingNode, char[] template) {
+  @Override
+	public boolean demarcate(Node terminatingNode, char[] template) {
     return false;
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     return "EvalNode:" + name + "{" + (contents == null ? "" : new String(contents, cStart, cEnd - cStart)) + "} (start=" + begin + ";end=" + end + ")";
   }
 }

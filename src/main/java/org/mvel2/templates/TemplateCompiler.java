@@ -18,9 +18,33 @@
 
 package org.mvel2.templates;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.CompileException;
 import org.mvel2.ParserContext;
-import org.mvel2.templates.res.*;
+import org.mvel2.templates.res.CodeNode;
+import org.mvel2.templates.res.CommentNode;
+import org.mvel2.templates.res.CompiledCodeNode;
+import org.mvel2.templates.res.CompiledDeclareNode;
+import org.mvel2.templates.res.CompiledEvalNode;
+import org.mvel2.templates.res.CompiledExpressionNode;
+import org.mvel2.templates.res.CompiledForEachNode;
+import org.mvel2.templates.res.CompiledIfNode;
+import org.mvel2.templates.res.CompiledIncludeNode;
+import org.mvel2.templates.res.CompiledNamedIncludeNode;
+import org.mvel2.templates.res.CompiledTerminalExpressionNode;
+import org.mvel2.templates.res.DeclareNode;
+import org.mvel2.templates.res.EndNode;
+import org.mvel2.templates.res.EvalNode;
+import org.mvel2.templates.res.ExpressionNode;
+import org.mvel2.templates.res.ForEachNode;
+import org.mvel2.templates.res.IfNode;
+import org.mvel2.templates.res.IncludeNode;
+import org.mvel2.templates.res.NamedIncludeNode;
+import org.mvel2.templates.res.Node;
+import org.mvel2.templates.res.Opcodes;
+import org.mvel2.templates.res.TerminalExpressionNode;
+import org.mvel2.templates.res.TerminalNode;
+import org.mvel2.templates.res.TextNode;
 import org.mvel2.templates.util.TemplateTools;
 import org.mvel2.util.ExecutionStack;
 import org.mvel2.util.ParseTools;
@@ -39,10 +63,10 @@ import static org.mvel2.util.ParseTools.subset;
  *
  * @author Mike Brock
  */
-@SuppressWarnings({"ManualArrayCopy"})
-public class TemplateCompiler {
-  private char[] template;
-  private int length;
+@SuppressWarnings("ManualArrayCopy")
+public final class TemplateCompiler {
+  private final char[] template;
+  private final int length;
 
   private int start;
   private int cursor;
@@ -53,11 +77,11 @@ public class TemplateCompiler {
 
   private boolean codeCache = false;
 
-  private Map<String, Class<? extends Node>> customNodes;
+  private @Nullable Map<String, Class<? extends Node>> customNodes;
 
   private ParserContext parserContext;
 
-  private static final Map<String, Integer> OPCODES = new HashMap<String, Integer>();
+  private static final Map<String, Integer> OPCODES = new HashMap<>();
 
   static {
     OPCODES.put("if", Opcodes.IF);
@@ -82,13 +106,12 @@ public class TemplateCompiler {
     return new CompiledTemplate(template, compileFrom(null, new ExecutionStack()));
   }
 
-  public Node compileFrom(Node root, ExecutionStack stack) {
+  public Node compileFrom(@Nullable Node root, ExecutionStack stack) {
     line = 1;
 
     Node n = root;
-    if (root == null) {
-      n = root = new TextNode(0, 0);
-    }
+    if (root == null)
+      	n = root = new TextNode(0, 0);
 
     IfNode last;
     Integer opcode;
@@ -227,13 +250,10 @@ public class TemplateCompiler {
                         stack.push(n);
                       }
                     }
-                    catch (InstantiationException e) {
-                      throw new RuntimeException("unable to instantiate custom node class: " + customNode.getName());
+                    catch (InstantiationException | IllegalAccessException e) {
+                      throw new RuntimeException("unable to instantiate custom node class: " + customNode.getName(), e);
                     }
-                    catch (IllegalAccessException e) {
-                      throw new RuntimeException("unable to instantiate custom node class: " + customNode.getName());
-                    }
-                  }
+									}
                   else {
                     throw new RuntimeException("unknown token type: " + name);
                   }
@@ -249,9 +269,8 @@ public class TemplateCompiler {
       CompileException ce = new CompileException(e.getMessage(), template, cursor, e);
       ce.setExpr(template);
 
-      if (e instanceof CompileException) {
-        CompileException ce2 = (CompileException) e;
-        if (ce2.getCursor() != -1) {
+      if (e instanceof CompileException ce2) {
+				if (ce2.getCursor() != -1) {
           ce.setCursor(ce2.getCursor());
           if (ce2.getColumn() == -1) ce.setColumn(ce.getCursor() - colStart);
           else ce.setColumn(ce2.getColumn());
@@ -409,8 +428,11 @@ public class TemplateCompiler {
     return new TemplateCompiler(TemplateTools.readStream(stream), customNodes, true, ParserContext.create()).compile();
   }
 
-  public static CompiledTemplate compileTemplate(InputStream stream, Map<String, Class<? extends Node>> customNodes,
-                                                 ParserContext context) {
+  public static CompiledTemplate compileTemplate(
+		InputStream stream,
+		@Nullable Map<String, Class<? extends Node>> customNodes,
+		ParserContext context
+	){
     return new TemplateCompiler(TemplateTools.readStream(stream), customNodes, true, context).compile();
   }
 
@@ -428,7 +450,7 @@ public class TemplateCompiler {
     return new TemplateCompiler(TemplateTools.readInFile(file), customNodes, true, ParserContext.create()).compile();
   }
 
-  public static CompiledTemplate compileTemplate(File file, Map<String, Class<? extends Node>> customNodes,
+  public static CompiledTemplate compileTemplate(File file, @Nullable Map<String, Class<? extends Node>> customNodes,
                                                  ParserContext context) {
     return new TemplateCompiler(TemplateTools.readInFile(file), customNodes, true, context).compile();
   }
@@ -473,57 +495,69 @@ public class TemplateCompiler {
     this.parserContext = context;
   }
 
-  public TemplateCompiler(String template, Map<String, Class<? extends Node>> customNodes) {
+  public TemplateCompiler(String template, @Nullable Map<String, Class<? extends Node>> customNodes) {
     this.length = (this.template = template.toCharArray()).length;
     this.customNodes = customNodes;
   }
 
-  public TemplateCompiler(char[] template, Map<String, Class<? extends Node>> customNodes) {
+  public TemplateCompiler(char[] template, @Nullable Map<String, Class<? extends Node>> customNodes) {
     this.length = (this.template = template).length;
     this.customNodes = customNodes;
   }
 
-  public TemplateCompiler(CharSequence sequence, Map<String, Class<? extends Node>> customNodes) {
+  public TemplateCompiler(CharSequence sequence, @Nullable Map<String, Class<? extends Node>> customNodes) {
     this.length = (this.template = sequence.toString().toCharArray()).length;
     this.customNodes = customNodes;
   }
 
-  public TemplateCompiler(String template, Map<String, Class<? extends Node>> customNodes, boolean codeCache) {
+  public TemplateCompiler(String template, @Nullable Map<String, Class<? extends Node>> customNodes, boolean codeCache) {
     this.length = (this.template = template.toCharArray()).length;
     this.customNodes = customNodes;
     this.codeCache = codeCache;
   }
 
-  public TemplateCompiler(char[] template, Map<String, Class<? extends Node>> customNodes, boolean codeCache) {
+  public TemplateCompiler(char[] template, @Nullable Map<String, Class<? extends Node>> customNodes, boolean codeCache) {
     this.length = (this.template = template).length;
     this.customNodes = customNodes;
     this.codeCache = codeCache;
   }
 
-  public TemplateCompiler(CharSequence sequence, Map<String, Class<? extends Node>> customNodes, boolean codeCache) {
+  public TemplateCompiler(CharSequence sequence, @Nullable Map<String, Class<? extends Node>> customNodes, boolean codeCache) {
     this.length = (this.template = sequence.toString().toCharArray()).length;
     this.customNodes = customNodes;
     this.codeCache = codeCache;
   }
 
-  public TemplateCompiler(String template, Map<String, Class<? extends Node>> customNodes, boolean codeCache,
-                          ParserContext context) {
+  public TemplateCompiler(
+		String template,
+		@Nullable Map<String, Class<? extends Node>> customNodes,
+		boolean codeCache,
+    ParserContext context
+	){
     this.length = (this.template = template.toCharArray()).length;
     this.customNodes = customNodes;
     this.codeCache = codeCache;
     this.parserContext = context;
   }
 
-  public TemplateCompiler(char[] template, Map<String, Class<? extends Node>> customNodes, boolean codeCache,
-                          ParserContext context) {
+  public TemplateCompiler(
+		char[] template,
+		@Nullable Map<String, Class<? extends Node>> customNodes,
+		boolean codeCache,
+		ParserContext context
+	){
     this.length = (this.template = template).length;
     this.customNodes = customNodes;
     this.codeCache = codeCache;
     this.parserContext = context;
   }
 
-  public TemplateCompiler(CharSequence sequence, Map<String, Class<? extends Node>> customNodes, boolean codeCache,
-                          ParserContext context) {
+  public TemplateCompiler (
+		CharSequence sequence,
+		@Nullable Map<String, Class<? extends Node>> customNodes,
+		boolean codeCache,
+		ParserContext context
+	){
     this.length = (this.template = sequence.toString().toCharArray()).length;
     this.customNodes = customNodes;
     this.codeCache = codeCache;

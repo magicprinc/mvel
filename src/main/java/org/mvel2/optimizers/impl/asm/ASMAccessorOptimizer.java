@@ -17,30 +17,12 @@
  */
 package org.mvel2.optimizers.impl.asm;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import org.mvel2.CompileException;
 import org.mvel2.DataConversion;
 import org.mvel2.MVEL;
 import org.mvel2.OptimizationFailure;
 import org.mvel2.ParserContext;
 import org.mvel2.PropertyAccessException;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 import org.mvel2.ast.FunctionInstance;
 import org.mvel2.ast.TypeDescriptor;
 import org.mvel2.ast.WithNode;
@@ -64,6 +46,24 @@ import org.mvel2.util.NullType;
 import org.mvel2.util.ParseTools;
 import org.mvel2.util.PropertyTools;
 import org.mvel2.util.StringAppender;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static java.lang.String.valueOf;
 import static java.lang.System.getProperty;
@@ -71,71 +71,10 @@ import static java.lang.Thread.currentThread;
 import static java.lang.reflect.Array.getLength;
 import static java.lang.reflect.Modifier.FINAL;
 import static java.lang.reflect.Modifier.STATIC;
-
 import static org.mvel2.DataConversion.canConvert;
 import static org.mvel2.DataConversion.convert;
 import static org.mvel2.MVEL.eval;
 import static org.mvel2.MVEL.isAdvancedDebugging;
-import static org.objectweb.asm.Opcodes.AALOAD;
-import static org.objectweb.asm.Opcodes.AASTORE;
-import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static org.objectweb.asm.Opcodes.ACONST_NULL;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.ANEWARRAY;
-import static org.objectweb.asm.Opcodes.ARETURN;
-import static org.objectweb.asm.Opcodes.ARRAYLENGTH;
-import static org.objectweb.asm.Opcodes.ASTORE;
-import static org.objectweb.asm.Opcodes.ATHROW;
-import static org.objectweb.asm.Opcodes.BALOAD;
-import static org.objectweb.asm.Opcodes.BASTORE;
-import static org.objectweb.asm.Opcodes.BIPUSH;
-import static org.objectweb.asm.Opcodes.CALOAD;
-import static org.objectweb.asm.Opcodes.CASTORE;
-import static org.objectweb.asm.Opcodes.CHECKCAST;
-import static org.objectweb.asm.Opcodes.DALOAD;
-import static org.objectweb.asm.Opcodes.DASTORE;
-import static org.objectweb.asm.Opcodes.DUP;
-import static org.objectweb.asm.Opcodes.DUP_X1;
-import static org.objectweb.asm.Opcodes.DUP_X2;
-import static org.objectweb.asm.Opcodes.FALOAD;
-import static org.objectweb.asm.Opcodes.FASTORE;
-import static org.objectweb.asm.Opcodes.GETFIELD;
-import static org.objectweb.asm.Opcodes.GETSTATIC;
-import static org.objectweb.asm.Opcodes.GOTO;
-import static org.objectweb.asm.Opcodes.IALOAD;
-import static org.objectweb.asm.Opcodes.IASTORE;
-import static org.objectweb.asm.Opcodes.ICONST_0;
-import static org.objectweb.asm.Opcodes.ICONST_1;
-import static org.objectweb.asm.Opcodes.ICONST_2;
-import static org.objectweb.asm.Opcodes.ICONST_3;
-import static org.objectweb.asm.Opcodes.ICONST_4;
-import static org.objectweb.asm.Opcodes.ICONST_5;
-import static org.objectweb.asm.Opcodes.IFEQ;
-import static org.objectweb.asm.Opcodes.IFNONNULL;
-import static org.objectweb.asm.Opcodes.IF_ICMPLT;
-import static org.objectweb.asm.Opcodes.ILOAD;
-import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.INVOKESTATIC;
-import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
-import static org.objectweb.asm.Opcodes.ISTORE;
-import static org.objectweb.asm.Opcodes.LALOAD;
-import static org.objectweb.asm.Opcodes.LASTORE;
-import static org.objectweb.asm.Opcodes.NEW;
-import static org.objectweb.asm.Opcodes.NEWARRAY;
-import static org.objectweb.asm.Opcodes.POP;
-import static org.objectweb.asm.Opcodes.PUTFIELD;
-import static org.objectweb.asm.Opcodes.RETURN;
-import static org.objectweb.asm.Opcodes.SALOAD;
-import static org.objectweb.asm.Opcodes.SASTORE;
-import static org.objectweb.asm.Opcodes.SIPUSH;
-import static org.objectweb.asm.Opcodes.SWAP;
-import static org.objectweb.asm.Type.getConstructorDescriptor;
-import static org.objectweb.asm.Type.getDescriptor;
-import static org.objectweb.asm.Type.getInternalName;
-import static org.objectweb.asm.Type.getMethodDescriptor;
-import static org.objectweb.asm.Type.getType;
 import static org.mvel2.ast.TypeDescriptor.getClassReference;
 import static org.mvel2.integration.GlobalListenerFactory.hasGetListeners;
 import static org.mvel2.integration.GlobalListenerFactory.notifyGetListeners;
@@ -145,8 +84,11 @@ import static org.mvel2.integration.PropertyHandlerFactory.getPropertyHandler;
 import static org.mvel2.integration.PropertyHandlerFactory.hasNullMethodHandler;
 import static org.mvel2.integration.PropertyHandlerFactory.hasNullPropertyHandler;
 import static org.mvel2.integration.PropertyHandlerFactory.hasPropertyHandler;
+import static org.mvel2.templates.util.TemplateTools.append;
+import static org.mvel2.templates.util.TemplateTools.str;
+import static org.mvel2.util.ArrayTools.EMPTY_CLASS;
+import static org.mvel2.util.ArrayTools.EMPTY_OBJ;
 import static org.mvel2.util.ArrayTools.findFirst;
-import static org.mvel2.util.ParseTools.EMPTY_OBJ_ARR;
 import static org.mvel2.util.ParseTools.balancedCapture;
 import static org.mvel2.util.ParseTools.balancedCaptureWithLineAccounting;
 import static org.mvel2.util.ParseTools.captureContructorAndResidual;
@@ -169,6 +111,12 @@ import static org.mvel2.util.ReflectionUtil.toNonPrimitiveArray;
 import static org.mvel2.util.ReflectionUtil.toNonPrimitiveType;
 import static org.mvel2.util.Varargs.normalizeArgsForVarArgs;
 import static org.mvel2.util.Varargs.paramTypeVarArgsSafe;
+import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Type.getConstructorDescriptor;
+import static org.objectweb.asm.Type.getDescriptor;
+import static org.objectweb.asm.Type.getInternalName;
+import static org.objectweb.asm.Type.getMethodDescriptor;
+import static org.objectweb.asm.Type.getType;
 
 
 /**
@@ -202,13 +150,7 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
     else LIST_IMPL = jitListImpl;
   }
 
-  private Object ctx;
   private Object thisRef;
-
-  private VariableResolverFactory variableFactory;
-
-  private static final Object[] EMPTYARG = new Object[0];
-  private static final Class[] EMPTYCLS = new Class[0];
 
   private boolean first = true;
   private boolean noinit = false;
@@ -234,8 +176,7 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
 
   private int compileDepth = 0;
 
-  @SuppressWarnings({"StringBufferField"})
-  private StringAppender buildLog;
+  private Appendable buildLog;
 
   public ASMAccessorOptimizer() {
     //do this to confirm we're running the correct version
@@ -243,9 +184,14 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
     new ClassWriter(ClassWriter.COMPUTE_MAXS);
   }
 
-  private ASMAccessorOptimizer(ClassWriter cw, MethodVisitor mv,
-                               ArrayList<ExecutableStatement> compiledInputs, String className,
-                               StringAppender buildLog, int compileDepth) {
+  private ASMAccessorOptimizer(
+		ClassWriter cw,
+		MethodVisitor mv,
+		ArrayList<ExecutableStatement> compiledInputs,
+		String className,
+		Appendable buildLog,
+		int compileDepth
+	){
     this.cw = cw;
     this.mv = mv;
     this.compiledInputs = compiledInputs;
@@ -261,9 +207,8 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
    * Does all the boilerplate for initiating the JIT.
    */
   private void _initJIT() {
-    if (isAdvancedDebugging()) {
-      buildLog = new StringAppender();
-    }
+    if (isAdvancedDebugging())
+      buildLog = new StringBuilder(255);
 
     cw = new ClassWriter(ClassWriter.COMPUTE_MAXS + ClassWriter.COMPUTE_FRAMES);
 
@@ -714,14 +659,11 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
             + ingressType.getName(), expr, start, pCtx);
       }
     }
-    catch (InvocationTargetException e) {
-      throw new PropertyAccessException("could not access property", expr, start, e, pCtx);
-    }
-    catch (IllegalAccessException e) {
+    catch (InvocationTargetException | IllegalAccessException e) {
       throw new PropertyAccessException("could not access property", expr, start, e, pCtx);
     }
 
-    try {
+		try {
       deferFinish = false;
       noinit = false;
 
@@ -773,13 +715,13 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
       cw.visitField(ACC_PUBLIC, "nullPropertyHandler", "L" + NAMESPACE + "integration/PropertyHandler;", null, null).visitEnd();
     }
 
-    if (methNull) {
+    if (methNull)
       cw.visitField(ACC_PUBLIC, "nullMethodHandler", "L" + NAMESPACE + "integration/PropertyHandler;", null, null).visitEnd();
-    }
 
     buildInputs();
 
-    if (buildLog != null && buildLog.length() != 0 && expr != null) {
+		var buildLogStr = str(buildLog);
+    if (buildLogStr.length() > 0 && expr != null){
       mv = cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null);
       mv.visitCode();
       Label l0 = new Label();
@@ -956,25 +898,13 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
 
       return _initializeAccessor();
     }
-    catch (InvocationTargetException e) {
-      throw new PropertyAccessException(new String(expr), expr, st, e, pCtx);
-    }
-    catch (IllegalAccessException e) {
-      throw new PropertyAccessException(new String(expr), expr, st, e, pCtx);
-    }
-    catch (IndexOutOfBoundsException e) {
+    catch (InvocationTargetException | IllegalAccessException | IndexOutOfBoundsException | NullPointerException e) {
       throw new PropertyAccessException(new String(expr), expr, st, e, pCtx);
     }
     catch (PropertyAccessException e) {
       throw new CompileException(e.getMessage(), expr, st, e);
     }
-    catch (CompileException e) {
-      throw e;
-    }
-    catch (NullPointerException e) {
-      throw new PropertyAccessException(new String(expr), expr, st, e, pCtx);
-    }
-    catch (OptimizationNotSupported e) {
+    catch (CompileException | OptimizationNotSupported e) {
       throw e;
     }
     catch (Exception e) {
@@ -1171,7 +1101,7 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
       }
 
       try {
-        o = ((Method) member).invoke(ctx, EMPTYARG);
+				o = ((Method) member).invoke(ctx, EMPTY_OBJ);
 
         if (returnType != member.getDeclaringClass()) {
           assert debug("CHECKCAST " + getInternalName(member.getDeclaringClass()));
@@ -1205,7 +1135,7 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
         mv.visitMethodInsn(INVOKEINTERFACE, getInternalName(iFaceMeth.getDeclaringClass()), member.getName(),
             getMethodDescriptor((Method) member));
 
-        o = iFaceMeth.invoke(ctx, EMPTYARG);
+        o = iFaceMeth.invoke(ctx, EMPTY_OBJ);
       }
       catch (IllegalArgumentException e) {
         if (member.getDeclaringClass().equals(ctx)) {
@@ -1213,7 +1143,7 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
             Class c = Class.forName(member.getDeclaringClass().getName() + "$" + property);
 
             throw new CompileException("name collision between innerclass: " + c.getCanonicalName()
-                + "; and bean accessor: " + property + " (" + member.toString() + ")", expr, tkStart);
+                + "; and bean accessor: " + property + " (" + member + ")", expr, tkStart);
           }
           catch (ClassNotFoundException e2) {
             //fallthru
@@ -1260,9 +1190,8 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
     else if (LITERALS.containsKey(property)) {
       Object lit = LITERALS.get(property);
 
-      if (lit instanceof Class) {
+      if (lit instanceof Class)
         ldcClassConstant((Class) lit);
-      }
 
       return lit;
     }
@@ -1300,7 +1229,7 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
 
               returnType = m.getReturnType();
 
-              return m.invoke(null, EMPTY_OBJ_ARR);
+              return m.invoke(null, EMPTY_OBJ);
             }
             else {
               writeFunctionPointerStub(c, m);
@@ -1343,7 +1272,7 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
         // Check if the static field reference is a constant and a primitive.
         if ((member.getModifiers() & FINAL) != 0 && (o instanceof String || ((Field) member).getType().isPrimitive())) {
           o = ((Field) member).get(null);
-          assert debug("LDC " + valueOf(o));
+          assert debug("LDC " + o);
           mv.visitLdcInsn(o);
           wrapPrimitive(o.getClass());
 
@@ -1636,9 +1565,8 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
         mv.visitTypeInsn(CHECKCAST, "java/util/Map");
 
         Class c = writeLiteralOrSubexpression(compiled);
-        if (c != null && c.isPrimitive()) {
+        if (c != null && c.isPrimitive())
           wrapPrimitive(c);
-        }
 
         assert debug("INVOKEINTERFACE: Map.get");
         mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
@@ -1800,8 +1728,8 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
     List<char[]> subtokens;
 
     if (tk.length() == 0) {
-      args = preConvArgs = ParseTools.EMPTY_OBJ_ARR;
-      argTypes = ParseTools.EMPTY_CLS_ARR;
+      args = preConvArgs = EMPTY_OBJ;
+      argTypes = EMPTY_CLASS;
       es = null;
       subtokens = null;
     }
@@ -2332,9 +2260,10 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
             contextClassLoader.defineClass(className, b);
   }
 
-  private boolean debug(String instruction) {
-    if (buildLog != null) {
-      buildLog.append(instruction).append("\n");
+  private boolean debug (String instruction) {
+    if (buildLog != null){
+			append(buildLog, instruction);
+			append(buildLog, "\n");
     }
     return true;
   }
@@ -2344,7 +2273,8 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
     return "ASM";
   }
 
-  public Object getResultOptPass() {
+  @Override
+	public Object getResultOptPass() {
     return val;
   }
 
@@ -2660,11 +2590,11 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
       wrapPrimitive(byte.class);
     }
   }
-  
+
   /**
    * Gets the ASM instruction operand for the given primitive type.
    * Will throw IllegalStateException if the type is not primitive.
-   * @param c The class representing the primitive type. 
+   * @param c The class representing the primitive type.
    * @return The operand
    */
   public static int toPrimitiveTypeOperand(Class<?> c) {
@@ -2688,7 +2618,7 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
       intPush(length);
       if (componentType.isPrimitive()) {
          assert debug("NEWARRAY " + getInternalName(componentType) + " (" + length + ")");
-         mv.visitIntInsn(NEWARRAY, toPrimitiveTypeOperand(componentType)); 
+         mv.visitIntInsn(NEWARRAY, toPrimitiveTypeOperand(componentType));
       }
       else {
          assert debug("ANEWARRAY " + getInternalName(componentType) + " (" + length + ")");
@@ -2779,11 +2709,11 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
     mv.visitLdcInsn(name);
 
     assert debug("INVOKEINTERFACE " + NAMESPACE + "integration/VariableResolverFactory.getVariableResolver");
-    mv.visitMethodInsn(INVOKEINTERFACE, "" + NAMESPACE + "integration/VariableResolverFactory",
+    mv.visitMethodInsn(INVOKEINTERFACE, NAMESPACE + "integration/VariableResolverFactory",
         "getVariableResolver", "(Ljava/lang/String;)L" + NAMESPACE + "integration/VariableResolver;");
 
     assert debug("INVOKEINTERFACE " + NAMESPACE + "integration/VariableResolver.getValue");
-    mv.visitMethodInsn(INVOKEINTERFACE, "" + NAMESPACE + "integration/VariableResolver",
+    mv.visitMethodInsn(INVOKEINTERFACE, NAMESPACE + "integration/VariableResolver",
         "getValue", "()Ljava/lang/Object;");
 
     returnType = Object.class;
@@ -2797,11 +2727,11 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
     intPush(pos);
 
     assert debug("INVOKEINTERFACE " + NAMESPACE + "integration/VariableResolverFactory.getIndexedVariableResolver");
-    mv.visitMethodInsn(INVOKEINTERFACE, "" + NAMESPACE + "integration/VariableResolverFactory",
+    mv.visitMethodInsn(INVOKEINTERFACE, NAMESPACE + "integration/VariableResolverFactory",
         "getIndexedVariableResolver", "(I)L" + NAMESPACE + "integration/VariableResolver;");
 
     assert debug("INVOKEINTERFACE " + NAMESPACE + "integration/VariableResolver.getValue");
-    mv.visitMethodInsn(INVOKEINTERFACE, "" + NAMESPACE + "integration/VariableResolver",
+    mv.visitMethodInsn(INVOKEINTERFACE, NAMESPACE + "integration/VariableResolver",
         "getValue", "()Ljava/lang/Object;");
 
     returnType = Object.class;
@@ -3033,12 +2963,12 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
     if (stmt instanceof ExecutableLiteral) {
         Object literalValue = ((ExecutableLiteral) stmt).getLiteral();
 
-      // Handle the case when the literal is null MVEL-312 
+      // Handle the case when the literal is null MVEL-312
       if(literalValue == null){
         mv.visitInsn(ACONST_NULL);
         return null;
-      }        
-        
+      }
+
       Class type = literalValue == null ? desiredTarget : literalValue.getClass();
 
       assert debug("*** type:" + type + ";desired:" + desiredTarget);
@@ -3327,7 +3257,7 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
         assert debug("DUP");
         mv.visitInsn(DUP);
 
-        Constructor cns = cls.getConstructor(EMPTYCLS);
+        Constructor cns = cls.getConstructor(EMPTY_CLASS);
 
         assert debug("INVOKESPECIAL <init>");
 

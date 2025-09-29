@@ -17,31 +17,22 @@
  */
 package org.mvel2.util;
 
-import java.util.Collection;
-
 public final class ArrayTools {
 	public static final char[] EMPTY_CHAR = new char[0];
+	public static final String[] EMPTY_STR = new String[0];
+	public static final Object[] EMPTY_OBJ = new Object[0];
+	public static final Class<?>[] EMPTY_CLASS = new Class[0];
 
 
 	/// @see ParseTools#find(char[], int, int, char)
   public static int findFirst (char c, int start, int offset, char[] array) {
-    int end = start + offset;
-    for (int i = start; i < end; i++) {
-      if (array[i] == c) return i;
-    }
-    return -1;
+		return ParseTools.find(array, start, offset, c);
   }
 
-  public static int findLast(char c, int start, int offset, char[] array) {
-    for (int i = start + offset - 1; i >= 0; i--) {
-      if (array[i] == c) return i;
-    }
-    return -1;
+	/// @see ParseTools#findLast
+  public static int findLast (char c, int start, int offset, char[] array) {
+		return ParseTools.findLast(array, start, offset, c);
   }
-
-	public static boolean isEmpty (Collection<?> c) {
-		return c == null || c.isEmpty();
-	}
 
 	public static char[] toCharArray (StringBuilder sb) {
 		int len = sb.length();

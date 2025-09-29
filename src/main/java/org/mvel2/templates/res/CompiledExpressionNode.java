@@ -18,20 +18,20 @@
 
 package org.mvel2.templates.res;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.templates.TemplateRuntime;
-import org.mvel2.templates.util.TemplateOutputStream;
 
 import java.io.Serializable;
 
-import static java.lang.String.valueOf;
+import static org.mvel2.templates.util.TemplateTools.append;
 
 public class CompiledExpressionNode extends ExpressionNode {
-  private Serializable ce;
+  private final Serializable ce;
 
-  public CompiledExpressionNode(int begin, String name, char[] template, int start, int end, ParserContext context) {
+  public CompiledExpressionNode (int begin, String name, char[] template, int start, int end, ParserContext context) {
     this.begin = begin;
     this.name = name;
     this.contents = template;
@@ -41,12 +41,14 @@ public class CompiledExpressionNode extends ExpressionNode {
     ce = MVEL.compileExpression(template, cStart, cEnd - cStart, context);
   }
 
-  public Object eval(TemplateRuntime runtime, TemplateOutputStream appender, Object ctx, VariableResolverFactory factory) {
-    appender.append(valueOf(MVEL.executeExpression(ce, ctx, factory)));
+  @Override
+	public @Nullable Object eval (TemplateRuntime runtime, Appendable appender, Object ctx, VariableResolverFactory factory) {
+    append(appender, MVEL.executeExpression(ce, ctx, factory));
     return next != null ? next.eval(runtime, appender, ctx, factory) : null;
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     return "ExpressionNode:" + name + "{" + (contents == null ? "" : new String(contents)) + "} (start=" + begin + ";end=" + end + ")";
   }
 }

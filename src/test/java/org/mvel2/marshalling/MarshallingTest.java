@@ -1,5 +1,9 @@
 package org.mvel2.marshalling;
 
+import org.mvel2.MVEL;
+import org.mvel2.tests.BaseMvelTestCase;
+import org.mvel2.util.StringAppender;
+
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -19,11 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.mvel2.MVEL;
-import org.mvel2.integration.impl.MapVariableResolverFactory;
-import org.mvel2.tests.BaseMvelTestCase;
-import org.mvel2.util.StringAppender;
 
 /**
  * Generates templates to marshaller classes.
@@ -229,18 +228,18 @@ public class MarshallingTest extends BaseMvelTestCase {
 
       switch (type) {
         case PRIMITIVE: {
-          ctx.getAppender().append(object);
+          ctx.getAppender().append(String.valueOf(object));
           break;
         }
         case CHAR: {
           ctx.getAppender().append("'");
-          ctx.getAppender().append(object);
+          ctx.getAppender().append(String.valueOf(object));
           ctx.getAppender().append("'");
           break;
         }
         case STRING: {
-          ctx.getAppender().append("'");
-          ctx.getAppender().append(object);
+          ctx.getAppender().append('\'');
+          ctx.getAppender().append(String.valueOf(object));
           ctx.getAppender().append("'");
           break;
         }
@@ -255,11 +254,11 @@ public class MarshallingTest extends BaseMvelTestCase {
           break;
         }
         case BIG_INTEGER: {
-          ctx.getAppender().append(object);
+          ctx.getAppender().append(String.valueOf(object));
           break;
         }
         case BIG_DECIMAL: {
-          ctx.getAppender().append(object);
+          ctx.getAppender().append(String.valueOf(object));
           break;
         }
         case ARRAY: {
@@ -268,12 +267,12 @@ public class MarshallingTest extends BaseMvelTestCase {
           break;
         }
         case MAP: {
-          marshallMap((Map) object,
+          marshallMap((Map<?,?>) object,
               ctx);
           break;
         }
         case COLLECTION: {
-          marshallCollection((Collection) object,
+          marshallCollection((Collection<?>) object,
               ctx);
           break;
         }
@@ -287,7 +286,7 @@ public class MarshallingTest extends BaseMvelTestCase {
     }
 
     private ObjectConverter generateConverter(Class cls) {
-      BeanInfo beanInfo = null;
+      BeanInfo beanInfo;
 
       try {
         beanInfo = Introspector.getBeanInfo(cls);
@@ -299,23 +298,22 @@ public class MarshallingTest extends BaseMvelTestCase {
       PropertyDescriptor[] props = beanInfo.getPropertyDescriptors();
       List<ObjectConverterEntry> list = new ArrayList<ObjectConverterEntry>();
 
-      for (int i = 0, length = props.length; i < length; i++) {
-        PropertyDescriptor prop = props[i];
-        if ("class".equals(prop.getName())) {
-          continue;
-        }
+			for (PropertyDescriptor prop : props){
+				if ("class".equals(prop.getName())){
+					continue;
+				}
 
-        list.add(new ObjectConverterEntry(prop.getName(),
-            prop.getReadMethod(),
-            getType(prop.getPropertyType())));
-      }
+				list.add(new ObjectConverterEntry(prop.getName(),
+					prop.getReadMethod(),
+					getType(prop.getPropertyType())));
+			}
 
       return new ObjectConverter(cls,
           list.toArray(new ObjectConverterEntry[list.size()]));
     }
 
-    private Type getType(Class cls) {
-      Type type = null;
+    private Type getType(Class<?> cls) {
+      Type type;
       if (cls.isPrimitive() || Number.class.isAssignableFrom(cls)) {
         type = Type.PRIMITIVE;
       }
@@ -371,7 +369,7 @@ public class MarshallingTest extends BaseMvelTestCase {
       ctx.getAppender().append(" ] ");
     }
 
-    private void marshallCollection(Collection collection,
+    private void marshallCollection(Collection<?> collection,
                                     MarshallerContext ctx) {
       ctx.getAppender().append(" [ ");
       int i = 0;
