@@ -127,27 +127,17 @@ import static org.objectweb.asm.Type.getType;
 public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorOptimizer {
   private static final String MAP_IMPL = "java/util/HashMap";
 
-  private static String LIST_IMPL;
-  private static String NAMESPACE;
+  private static final String LIST_IMPL = "java/util/ArrayList";
+  private static final String NAMESPACE;
   private static final int OPCODES_VERSION;
 
   static {
     final String javaVersion = PropertyTools.getJavaVersion();
-    if (javaVersion.startsWith("1.4")) {
-      OPCODES_VERSION = Opcodes.V1_4;
-    } else if (javaVersion.startsWith("1.5")) {
-      OPCODES_VERSION = Opcodes.V1_5;
-    } else {
-      OPCODES_VERSION = Opcodes.V1_6;
-    }
+		OPCODES_VERSION = Opcodes.V17;
 
     String defaultNameSapce = getProperty("mvel2.namespace");
     if (defaultNameSapce == null) NAMESPACE = "org/mvel2/";
     else NAMESPACE = defaultNameSapce;
-
-    String jitListImpl = getProperty("mvel2.jit.list_impl");
-    if (jitListImpl == null) LIST_IMPL = NAMESPACE + "util/FastList";
-    else LIST_IMPL = jitListImpl;
   }
 
   private Object thisRef;
@@ -237,9 +227,8 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
 
 
   private void _initJIT2() {
-    if (isAdvancedDebugging()) {
-      buildLog = new StringAppender();
-    }
+    if (isAdvancedDebugging())
+      	buildLog = new StringBuilder(255);
 
     cw = new ClassWriter(ClassWriter.COMPUTE_MAXS + ClassWriter.COMPUTE_FRAMES);
 
@@ -266,8 +255,18 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
             + "integration/VariableResolverFactory;Ljava/lang/Object;)Ljava/lang/Object;", null, null)).visitCode();
   }
 
-  public Accessor optimizeAccessor(ParserContext pCtx, char[] property, int start, int offset, Object staticContext,
-                                   Object thisRef, VariableResolverFactory factory, boolean root, Class ingressType) {
+	@Override
+	public Accessor optimizeAccessor (
+		ParserContext pCtx,
+		char[] property,
+		int start,
+		int offset,
+		Object staticContext,
+		Object thisRef,
+		VariableResolverFactory factory,
+		boolean root,
+		Class ingressType
+	){
     time = System.currentTimeMillis();
 
     if (compiledInputs == null) compiledInputs = new ArrayList<ExecutableStatement>();
@@ -720,13 +719,13 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
 
     buildInputs();
 
-		var buildLogStr = str(buildLog);
-    if (buildLogStr.length() > 0 && expr != null){
+		String buildLogStr;
+    if (expr != null && ((buildLogStr = str(buildLog)).length() > 0)){
       mv = cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null);
       mv.visitCode();
       Label l0 = new Label();
       mv.visitLabel(l0);
-      mv.visitLdcInsn(buildLog.toString() + "\n\n## { " + new String(expr) + " }");
+      mv.visitLdcInsn(buildLogStr + "\n\n## { " + new String(expr) + " }");
       mv.visitInsn(ARETURN);
       Label l1 = new Label();
       mv.visitLabel(l1);
@@ -750,10 +749,10 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
     if (deferFinish) {
       return null;
     }
-    /**
+    /*
      * Hot load the class we just generated.
      */
-    Class cls = loadClass(className, cw.toByteArray());
+    Class<?> cls = loadClass(className, cw.toByteArray());
 
     assert debug("[MVEL JIT Completed Optimization <<" + (expr != null ? new String(expr) : "") + ">>]::" + cls
         + " (time: " + (System.currentTimeMillis() - time) + "ms)");
@@ -1137,15 +1136,15 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
 
         o = iFaceMeth.invoke(ctx, EMPTY_OBJ);
       }
-      catch (IllegalArgumentException e) {
-        if (member.getDeclaringClass().equals(ctx)) {
+      catch (IllegalArgumentException e){
+        if (member.getDeclaringClass().equals(ctx)){
           try {
             Class c = Class.forName(member.getDeclaringClass().getName() + "$" + property);
 
             throw new CompileException("name collision between innerclass: " + c.getCanonicalName()
-                + "; and bean accessor: " + property + " (" + member + ")", expr, tkStart);
+                + "; and bean accessor: " + property + " (" + member + ")", expr, tkStart, e);
           }
-          catch (ClassNotFoundException e2) {
+          catch (ClassNotFoundException ignore){
             //fallthru
           }
         }
@@ -1263,9 +1262,9 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
     }
   }
 
-private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?> cls, Member member)
+	private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?> cls, Member member)
     throws IllegalAccessException
-{
+	{
     Object o = ((Field) member).get(ctx);
 
       if (((member.getModifiers() & STATIC) != 0)) {
@@ -1305,16 +1304,15 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
       returnType = ((Field) member).getType();
 
       if (hasNullPropertyHandler()) {
-        if (o == null) {
-          o = getNullPropertyHandler().getProperty(member.getName(), ctx, variableFactory);
-        }
+        if (o == null)
+          	o = getNullPropertyHandler().getProperty(member.getName(), ctx, variableFactory);
 
         writeOutNullHandler(member, 0);
       }
 
       currType = toNonPrimitiveType(returnType);
       return o;
-}
+	}
 
 
   private void writeFunctionPointerStub(Class c, Method m) {
@@ -1378,10 +1376,10 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
     skipWhitespace();
 
     if (cursor == end)
-      throw new CompileException("unterminated '['", expr, st);
+      	throw new CompileException("unterminated '['", expr, st);
 
     if (scanTo(']'))
-      throw new CompileException("unterminated '['", expr, st);
+      	throw new CompileException("unterminated '['", expr, st);
 
     String tk = new String(expr, start, cursor - start);
 
@@ -1909,14 +1907,14 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
       // normalize ExecutableStatement for varargs
       ExecutableStatement[] varArgEs = new ExecutableStatement[parameterTypes.length];
       int varArgStart = parameterTypes.length-1;
-      for (int i = 0; i < varArgStart; i++) varArgEs[i] = es[i];
+			if (varArgStart >= 0) System.arraycopy(es, 0, varArgEs, 0, varArgStart);
 
       String varargsTypeName = parameterTypes[parameterTypes.length-1].getComponentType().getName();
       String varArgExpr;
-      if("null".equals(tk)){ //if null is the token no need for wrapping
-            varArgExpr = tk;
+      if ("null".equals(tk)){ //if null is the token no need for wrapping
+					varArgExpr = tk;
       } else{
-         StringBuilder sb = new StringBuilder("new ").append(varargsTypeName).append("[] {");
+         var sb = new StringBuilder("new ").append(varargsTypeName).append("[] {");
          for (int i = varArgStart; i < subtokens.size(); i++) {
            sb.append(subtokens.get(i));
            if (i < subtokens.size()-1) sb.append(",");
@@ -1930,7 +1928,7 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
       if (preConvArgs.length == parameterTypes.length-1) {
         // empty vararg
         Object[] preConvArgsForVarArg = new Object[parameterTypes.length];
-        for (int i = 0; i < preConvArgs.length; i++) preConvArgsForVarArg[i] = preConvArgs[i];
+				System.arraycopy(preConvArgs, 0, preConvArgsForVarArg, 0, preConvArgs.length);
         preConvArgsForVarArg[parameterTypes.length-1] = Array.newInstance(parameterTypes[parameterTypes.length-1].getComponentType(), 0);
         preConvArgs = preConvArgsForVarArg;
       }
@@ -1939,10 +1937,9 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
     int inputsOffset = compiledInputs.size();
 
     if (es != null) {
-      for (ExecutableStatement e : es) {
-        if (e instanceof ExecutableLiteral) {
-          continue;
-        }
+      for (ExecutableStatement e : es){
+        if (e instanceof ExecutableLiteral)
+          	continue;
 
         compiledInputs.add(e);
       }
@@ -1954,7 +1951,7 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
     }
 
     if (m == null) {
-      StringAppender errorBuild = new StringAppender();
+      var errorBuild = new StringAppender();
 
       if (parameterTypes != null) {
         for (int i = 0; i < args.length; i++) {
@@ -3282,11 +3279,10 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
     }
   }
 
-  public Class getEgressType() {
-    return returnType;
-  }
+  @Override
+	public Class<?> getEgressType (){ return returnType; }
 
-  private void dumpAdvancedDebugging() {
+  private void dumpAdvancedDebugging () {
     if (buildLog == null) return;
 
     System.out.println("JIT Compiler Dump for: <<" + (expr == null ? null : new String(expr))
@@ -3308,9 +3304,9 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
 
   private Object propHandlerByteCode(String property, Object ctx, Class handler) {
     PropertyHandler ph = getPropertyHandler(handler);
-    if (ph instanceof ProducesBytecode) {
+    if (ph instanceof ProducesBytecode pb){
       assert debug("<<3rd-Party Code Generation>>");
-      ((ProducesBytecode) ph).produceBytecodeGet(mv, property, variableFactory);
+      pb.produceBytecodeGet(mv, property, variableFactory);
       return ph.getProperty(property, ctx, variableFactory);
     }
     else {
@@ -3321,9 +3317,9 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
 
   private void propHandlerByteCodePut(String property, Object ctx, Class handler, Object value) {
     PropertyHandler ph = getPropertyHandler(handler);
-    if (ph instanceof ProducesBytecode) {
+    if (ph instanceof ProducesBytecode pb){
       assert debug("<<3rd-Party Code Generation>>");
-      ((ProducesBytecode) ph).produceBytecodePut(mv, property, variableFactory);
+      pb.produceBytecodePut(mv, property, variableFactory);
       ph.setProperty(property, ctx, variableFactory, value);
     }
     else {
@@ -3380,7 +3376,8 @@ private Object optimizeFieldMethodProperty(Object ctx, String property, Class<?>
 
   }
 
-  public boolean isLiteralOnly() {
+  @Override
+	public boolean isLiteralOnly() {
     return literal;
   }
 }

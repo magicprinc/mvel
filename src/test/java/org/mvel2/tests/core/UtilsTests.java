@@ -1,13 +1,13 @@
 package org.mvel2.tests.core;
 
+import org.mvel2.MVEL;
+import org.mvel2.tests.BaseMvelTestCase;
+import org.mvel2.util.StringAppender;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.mvel2.MVEL;
-import org.mvel2.tests.BaseMvelTestCase;
-import org.mvel2.util.FastList;
-import org.mvel2.util.StringAppender;
 
 public class UtilsTests extends BaseMvelTestCase {
 
@@ -28,7 +28,7 @@ public class UtilsTests extends BaseMvelTestCase {
   }
 
   public void testFastList1() {
-    FastList list = new FastList(3);
+    var list = new ArrayList<>(3);
     list.add("One");
     list.add("Two");
     list.add("Three");
@@ -52,7 +52,7 @@ public class UtilsTests extends BaseMvelTestCase {
   }
 
   public void testAddToFastList() throws Exception {
-    FastList fl = new FastList(0);
+    var fl = new ArrayList<>(0);
     assertEquals(0, fl.size());
 
     // this throws an ArrayIndexOutOfBoundsException:0
@@ -61,12 +61,12 @@ public class UtilsTests extends BaseMvelTestCase {
   }
 
   public void testAddAllFastList() throws Exception {
-    FastList fl1 = new FastList(1);
+    var fl1 = new ArrayList<>(1);
     fl1.add("value1");
     fl1.add("value2");
     assertEquals(2, fl1.size());
 
-    FastList fl2 = new FastList(1);
+    ArrayList fl2 = new ArrayList(1);
     fl2.add("value3");
     fl2.add("value4");
 
@@ -77,11 +77,11 @@ public class UtilsTests extends BaseMvelTestCase {
   }
 
   public void testAddAllFastList2() throws Exception {
-    FastList<String> fl1 = new FastList<String>();
+    ArrayList<String> fl1 = new ArrayList<String>();
     fl1.add("value1");
     fl1.add("value2");
 
-    FastList<String> fl2 = new FastList<String>();
+    ArrayList<String> fl2 = new ArrayList<String>();
     fl2.add("value3");
     fl2.add("value4");
 
@@ -94,10 +94,10 @@ public class UtilsTests extends BaseMvelTestCase {
   }
 
   public void testAddAll2() {
-    FastList<String> flSource = new FastList<String>();
+    ArrayList<String> flSource = new ArrayList<String>();
     flSource.add("value");
 
-    FastList<String> flDest = new FastList<String>(flSource.size());
+    ArrayList<String> flDest = new ArrayList<String>(flSource.size());
     flDest.addAll(flSource); // throws ArrayIndexOutOfBoundsException: 2
     assertEquals("value", flDest.get(0));
   }

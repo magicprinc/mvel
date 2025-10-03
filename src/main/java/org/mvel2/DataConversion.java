@@ -15,16 +15,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.mvel2;
 
-import org.mvel2.conversion.*;
-import org.mvel2.util.FastList;
+import org.jspecify.annotations.Nullable;
+import org.mvel2.conversion.ArrayHandler;
+import org.mvel2.conversion.BigDecimalCH;
+import org.mvel2.conversion.BigIntegerCH;
+import org.mvel2.conversion.BooleanCH;
+import org.mvel2.conversion.ByteCH;
+import org.mvel2.conversion.CharArrayCH;
+import org.mvel2.conversion.CharCH;
+import org.mvel2.conversion.CompositeCH;
+import org.mvel2.conversion.DoubleCH;
+import org.mvel2.conversion.FloatCH;
+import org.mvel2.conversion.IntArrayCH;
+import org.mvel2.conversion.IntegerCH;
+import org.mvel2.conversion.ListCH;
+import org.mvel2.conversion.LongCH;
+import org.mvel2.conversion.ObjectCH;
+import org.mvel2.conversion.SetCH;
+import org.mvel2.conversion.ShortCH;
+import org.mvel2.conversion.StringArrayCH;
+import org.mvel2.conversion.StringCH;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.Vector;
 
 import static org.mvel2.util.ReflectionUtil.isAssignableFrom;
 import static org.mvel2.util.ReflectionUtil.toNonPrimitiveType;
@@ -92,7 +117,7 @@ public class DataConversion {
     CONVERTERS.put(BigInteger.class, new BigIntegerCH());
 
     CONVERTERS.put(List.class, ch = new ListCH());
-    CONVERTERS.put(FastList.class, ch);
+    CONVERTERS.put(Vector.class, ch);// FastList
     CONVERTERS.put(ArrayList.class, ch);
     CONVERTERS.put(LinkedList.class, ch);
 
@@ -113,11 +138,11 @@ public class DataConversion {
     return false;
   }
 
-  public static <T> T convert(Object in, Class<T> toType) {
+  @SuppressWarnings("unchecked")
+	public static <T> @Nullable T convert(Object in, Class<T> toType) {
     if (in == null) return null;
-    if (toType == in.getClass() || toType.isAssignableFrom(in.getClass())) {
-      return (T) in;
-    }
+    if (toType == in.getClass() || toType.isAssignableFrom(in.getClass()))
+      	return (T) in;
 
     ConversionHandler h = CONVERTERS.get(toType);
     if (h == null && toType.isArray()) {
@@ -138,9 +163,5 @@ public class DataConversion {
    */
   public static void addConversionHandler(Class type, ConversionHandler handler) {
     CONVERTERS.put(type, handler);
-  }
-
-  public static void main(String[] args) {
-    System.out.println(char[][].class);
   }
 }

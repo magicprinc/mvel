@@ -2,14 +2,12 @@ package org.mvel2.tests.perftests;
 
 import org.mvel2.MVEL;
 import org.mvel2.compiler.ExecutableAccessor;
-import org.mvel2.util.FastList;
 
+import java.util.ArrayList;
 import java.util.List;
-
 
 public class InlineCollectionsPerformance {
   private static final int COUNT = 200000;
-
 
   public static void main(String[] args) {
     long time;
@@ -86,9 +84,9 @@ public class InlineCollectionsPerformance {
   }
 
   public static void testJavaList() {
-    FastList list;
+    List list;
     for (int i = 0; i < COUNT; i++) {
-      list = new FastList(10);
+      list = new ArrayList<>(10);
 
       list.add("Foo244");
       list.add("Bar");
@@ -107,6 +105,5 @@ public class InlineCollectionsPerformance {
 
       assert "Foo244".equals(list.get(0)) && "Bar".equals(list.get(1)) && list.size() == 10;
     }
-
   }
 }
