@@ -34,7 +34,7 @@ public interface PropertyHandler {
    * @param variableFactory - the root variable factory provided by the runtime.
    * @return - the value of the property.
    */
-	Object getProperty (String name, @Nullable Object contextObj, VariableResolverFactory variableFactory);
+	Object getProperty (String name, @Nullable Object contextObj, @Nullable VariableResolverFactory variableFactory);
 
 
   /**

@@ -17,6 +17,8 @@
  */
 package org.mvel2;
 
+import org.jspecify.annotations.Nullable;
+
 public class PropertyAccessException extends CompileException {
 
   public PropertyAccessException(String message, char[] expr, int cursor, Throwable e, ParserContext pCtx) {
@@ -24,7 +26,7 @@ public class PropertyAccessException extends CompileException {
     setParserContext(pCtx);
   }
 
-  public PropertyAccessException(String message, char[] expr, int cursor, ParserContext pCtx) {
+  public PropertyAccessException(String message, char[] expr, int cursor, @Nullable ParserContext pCtx) {
     super(message, expr, cursor);
     setParserContext(pCtx);
   }

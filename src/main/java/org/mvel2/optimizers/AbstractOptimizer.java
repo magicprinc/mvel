@@ -17,6 +17,7 @@
  */
 package org.mvel2.optimizers;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.CompileException;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
@@ -25,7 +26,11 @@ import org.mvel2.compiler.AbstractParser;
 import java.lang.reflect.Method;
 
 import static java.lang.Thread.currentThread;
-import static org.mvel2.util.ParseTools.*;
+import static org.mvel2.util.ParseTools.captureStringLiteral;
+import static org.mvel2.util.ParseTools.findInnerClass;
+import static org.mvel2.util.ParseTools.forNameWithInner;
+import static org.mvel2.util.ParseTools.isIdentifierPart;
+import static org.mvel2.util.ParseTools.isWhitespace;
 
 /**
  * @author Christopher Brock
@@ -38,7 +43,7 @@ public class AbstractOptimizer extends AbstractParser {
 
   protected boolean collection = false;
   protected boolean nullSafe = false;
-  protected Class currType = null;
+  protected @Nullable Class currType = null;
   protected boolean staticAccess = false;
 
   protected int tkStart;

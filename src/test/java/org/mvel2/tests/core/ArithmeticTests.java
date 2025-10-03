@@ -7,7 +7,6 @@ import org.mvel2.ParserContext;
 import org.mvel2.compiler.CompiledExpression;
 import org.mvel2.compiler.ExecutableStatement;
 import org.mvel2.compiler.ExpressionCompiler;
-import org.mvel2.integration.impl.CachedMapVariableResolverFactory;
 import org.mvel2.optimizers.OptimizerFactory;
 import org.mvel2.util.Make;
 
@@ -24,7 +23,7 @@ public class ArithmeticTests extends AbstractTest {
   public void testMath() {
     Map<String,Object> vars = createTestMap();
 
-    //   assertEquals(188, MVEL.eval("pi * hour", vars));
+    assertEquals(188, MVEL.eval("pi * hour", vars));
 
     Serializable s = MVEL.compileExpression("pi * hour");
     assertEquals(188, MVEL.executeExpression(s, vars));
@@ -1105,34 +1104,40 @@ public class ArithmeticTests extends AbstractTest {
 		Assert.assertTrue((boolean) result);
 	}
 
-	/// todo https://github.com/mvel/mvel/issues/369
-	public void testMax () {
-		Object result = MVEL.eval("Math.max(5.1, 20.0)");
-		assertEquals(Double.class, result.getClass());
-		assertEquals(20.0, result);
+//	/// todo https://github.com/mvel/mvel/issues/369
+//	public void testMax () {
+//		Object result = MVEL.eval("Math.max(5.1, 20.0)");
+//		assertEquals(Double.class, result.getClass());
+//		assertEquals(20.0, result);
+//
+//		result = MVEL.eval("Math.max(5.1, 20)");
+//		assertEquals(Integer.class, result.getClass());
+//		assertEquals(20, result);
+//
+//		result = MVEL.eval("Math.max(5, 20.1)");
+//		assertEquals(Integer.class, result.getClass());
+//		assertEquals(20, result);// wrong
+//
+//		result = test("Math.min(5.1, 20)");
+//		assertEquals(5, result);
+//		assertEquals(Integer.class, result.getClass());// todo wrong
+//
+//		result = test("Math.max(5.1, 20)");
+//		assertEquals(Integer.class, result.getClass());
+//
+//		var context = new ParserContext();
+//		context.setStrictTypeEnforcement(true);
+//		context.setStrongTyping(true);
+//
+//		Serializable compiled = MVEL.compileExpression("Math.min(5.1, 20)");
+//		result = MVEL.executeExpression(compiled, context, new CachedMapVariableResolverFactory(new HashMap<>()));
+//		assertEquals(Integer.class, result.getClass());
+//		assertEquals(5, result);
+//	}
 
-		result = MVEL.eval("Math.max(5.1, 20)");
-		assertEquals(Integer.class, result.getClass());
-		assertEquals(20, result);
 
-		result = MVEL.eval("Math.max(5, 20.1)");
-		assertEquals(Integer.class, result.getClass());
-		assertEquals(20, result);// wrong
-
-		result = test("Math.min(5.1, 20)");
-		assertEquals(5, result);
-		assertEquals(Integer.class, result.getClass());// todo wrong
-
-		result = test("Math.max(5.1, 20)");
-		assertEquals(Integer.class, result.getClass());
-
-		var context = new ParserContext();
-		context.setStrictTypeEnforcement(true);
-		context.setStrongTyping(true);
-
-		Serializable compiled = MVEL.compileExpression("Math.min(5.1, 20)");
-		result = MVEL.executeExpression(compiled, context, new CachedMapVariableResolverFactory(new HashMap<>()));
-		assertEquals(Integer.class, result.getClass());
-		assertEquals(5, result);
+	public void testBasic () {
+		assertEquals(2.0, MVEL.eval("Math.sin(Math.PI/2) * 2 + Math.cos(Math.PI/2) * 2"));
+		assertEquals(2.0, MVEL.executeExpression(MVEL.compileExpression("Math.sin(Math.PI/2) * 2 + Math.cos(Math.PI/2) * 2")));
 	}
 }

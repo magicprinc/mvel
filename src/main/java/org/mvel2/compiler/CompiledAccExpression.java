@@ -18,6 +18,7 @@
 
 package org.mvel2.compiler;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.optimizers.OptimizerFactory;
@@ -27,9 +28,9 @@ import java.io.Serializable;
 import static org.mvel2.optimizers.OptimizerFactory.getThreadAccessorOptimizer;
 
 public class CompiledAccExpression implements ExecutableStatement, Serializable {
-  private char[] expression;
-  private int start;
-  private int offset;
+  private final char[] expression;
+  private final int start;
+  private final int offset;
 
   private transient Accessor accessor;
   private ParserContext context;
@@ -61,7 +62,8 @@ public class CompiledAccExpression implements ExecutableStatement, Serializable 
     return value;
   }
 
-  public Object getValue(Object staticContext, VariableResolverFactory factory) {
+  @Override
+	public Object getValue(Object staticContext, VariableResolverFactory factory) {
     if (accessor == null) {
       try {
         accessor = getThreadAccessorOptimizer()
@@ -75,34 +77,42 @@ public class CompiledAccExpression implements ExecutableStatement, Serializable 
     return accessor.getValue(staticContext, staticContext, factory);
   }
 
-  public void setKnownIngressType(Class type) {
+  @Override
+	public void setKnownIngressType(Class type) {
     this.ingressType = type;
   }
 
-  public void setKnownEgressType(Class type) {
+  @Override
+	public void setKnownEgressType(Class type) {
 
   }
 
-  public Class getKnownIngressType() {
+  @Override
+	public Class getKnownIngressType() {
     return ingressType;
   }
 
-  public Class getKnownEgressType() {
+  @Override
+	public @Nullable Class getKnownEgressType() {
     return null;
   }
 
-  public boolean isConvertableIngressEgress() {
+  @Override
+	public boolean isConvertableIngressEgress() {
     return false;
   }
 
-  public void computeTypeConversionRule() {
+  @Override
+	public void computeTypeConversionRule() {
   }
 
-  public boolean intOptimized() {
+  @Override
+	public boolean intOptimized() {
     return false;
   }
 
-  public boolean isLiteralOnly() {
+  @Override
+	public boolean isLiteralOnly() {
     return false;
   }
 
@@ -124,11 +134,13 @@ public class CompiledAccExpression implements ExecutableStatement, Serializable 
     return accessor;
   }
 
-  public boolean isEmptyStatement() {
+  @Override
+	public boolean isEmptyStatement() {
     return accessor == null;
   }
 
-  public boolean isExplicitCast() {
+  @Override
+	public boolean isExplicitCast() {
     return false;
   }
 }

@@ -1,7 +1,6 @@
 package org.mvel2.tests.core;
 
 import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
 import org.mvel2.DataConversion;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
@@ -10,7 +9,6 @@ import org.mvel2.compiler.ExpressionCompiler;
 import org.mvel2.debug.DebugTools;
 import org.mvel2.integration.impl.MapVariableResolverFactory;
 import org.mvel2.optimizers.dynamic.DynamicOptimizer;
-import org.mvel2.tests.BaseMvelTest;
 import org.mvel2.tests.BaseMvelTestCase;
 import org.mvel2.tests.core.res.Base;
 import org.mvel2.tests.core.res.DerivedClass;
@@ -42,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.lang.Integer.parseInt;
-import static java.lang.String.valueOf;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.getProperty;
 import static org.mvel2.MVEL.compileExpression;
@@ -63,8 +60,8 @@ public abstract class AbstractTest extends BaseMvelTestCase {
     // to satify Eclipse and Surefire.
   }
 
-  protected static Map createTestMap() {
-    Map map = new HashMap();
+  protected static Map<String,Object> createTestMap() {
+    var map = new HashMap<String,Object>();
     map.put("foo", new Foo());
     map.put("a", null);
     map.put("b", null);
@@ -106,9 +103,6 @@ public abstract class AbstractTest extends BaseMvelTestCase {
     return map;
   }
 
-
-  protected void tearDown() throws Exception {
-  }
 
   protected Object test(final String ex) {
     Thread[] threads;
@@ -197,7 +191,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
       if (last != null) {
         for (Object o : results) {
           if (o == null) {
-            throw new AssertionError("differing result in multi-thread test (first array has: " + valueOf(last) + "; second has: " + valueOf(o) + ")");
+            throw new AssertionError("differing result in multi-thread test (first array has: " + last + "; second has: " + o + ")");
           }
           else if (!o.equals(last)) {
             if (o.getClass().isArray()) {
@@ -219,7 +213,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
 //                            }
             }
             else {
-              throw new AssertionError("differing result in multi-thread test (last was: " + valueOf(last) + "; current is: " + valueOf(o) + ")");
+              throw new AssertionError("differing result in multi-thread test (last was: " + last + "; current is: " + o + ")");
             }
           }
           last = o;
@@ -292,7 +286,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
         first = executeExpression(compiled, new Base(), createTestMap());
       }
       catch (Exception e) {
-        failErrors.append("\nFIRST TEST: { " + ex + " }: EXCEPTION REPORT: \n\n");
+        failErrors.append("\nFIRST TEST: { ").append(ex).append(" }: EXCEPTION REPORT: \n\n");
 
         CharArrayWriter writer = new CharArrayWriter();
         e.printStackTrace(new PrintWriter(writer));
@@ -304,7 +298,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
         second = executeExpression(compiled, new Base(), createTestMap());
       }
       catch (Exception e) {
-        failErrors.append("\nSECOND TEST: { " + ex + " }: EXCEPTION REPORT: \n\n");
+        failErrors.append("\nSECOND TEST: { ").append(ex).append(" }: EXCEPTION REPORT: \n\n");
 
         CharArrayWriter writer = new CharArrayWriter();
         e.printStackTrace(new PrintWriter(writer));
@@ -318,7 +312,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
       third = MVEL.eval(ex, new Base(), createTestMap());
     }
     catch (Exception e) {
-      failErrors.append("\nTHIRD TEST: { " + ex + " }: EXCEPTION REPORT: \n\n");
+      failErrors.append("\nTHIRD TEST: { ").append(ex).append(" }: EXCEPTION REPORT: \n\n");
 
       CharArrayWriter writer = new CharArrayWriter();
       e.printStackTrace(new PrintWriter(writer));
@@ -328,17 +322,17 @@ public abstract class AbstractTest extends BaseMvelTestCase {
 
     if (first != null && !first.getClass().isArray()) {
       if (!first.equals(second)) {
-        System.out.println(failErrors.toString());
+        System.out.println(failErrors);
 
         throw new AssertionError("Different result from test 1 and 2 (Compiled Re-Run / JIT) [first: "
-            + valueOf(first) + "; second: " + valueOf(second) + "]");
+            + first + "; second: " + second + "]");
       }
 
       if (!first.equals(third)) {
-        if (failErrors != null) System.out.println(failErrors.toString());
+        if (failErrors != null) System.out.println(failErrors);
 
         throw new AssertionError("Different result from test 1 and 3 (Compiled to Interpreted) [first: " +
-            valueOf(first) + " (" + (first != null ? first.getClass().getName() : null) + "); third: " + valueOf(third) + " (" + (third != null ? third.getClass().getName() : "null") + ")]");
+					first + " (" + (first != null ? first.getClass().getName() : null) + "); third: " + third + " (" + (third != null ? third.getClass().getName() : "null") + ")]");
       }
     }
 
@@ -350,7 +344,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
     }
     catch (Exception e) {
       if (failErrors == null) failErrors = new StringAppender();
-      failErrors.append("\nFOURTH TEST: { " + ex + " }: EXCEPTION REPORT: \n\n");
+      failErrors.append("\nFOURTH TEST: { ").append(ex).append(" }: EXCEPTION REPORT: \n\n");
 
       CharArrayWriter writer = new CharArrayWriter();
       e.printStackTrace(new PrintWriter(writer));
@@ -364,7 +358,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
     catch (Exception e) {
       e.printStackTrace();
       if (failErrors == null) failErrors = new StringAppender();
-      failErrors.append("\nFIFTH TEST: { " + ex + " }: EXCEPTION REPORT: \n\n");
+      failErrors.append("\nFIFTH TEST: { ").append(ex).append(" }: EXCEPTION REPORT: \n\n");
 
       CharArrayWriter writer = new CharArrayWriter();
       e.printStackTrace(new PrintWriter(writer));
@@ -375,7 +369,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
     if (fourth != null && !fourth.getClass().isArray()) {
       if (!fourth.equals(fifth)) {
         throw new AssertionError("Different result from test 4 and 5 (Compiled Re-Run X2) [fourth: "
-            + valueOf(fourth) + "; fifth: " + valueOf(fifth) + "]");
+            + fourth + "; fifth: " + fifth + "]");
       }
     }
 
@@ -393,7 +387,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
     }
     catch (Exception e) {
       if (failErrors == null) failErrors = new StringAppender();
-      failErrors.append("\nSIXTH TEST: { " + ex + " }: EXCEPTION REPORT: \n\n");
+      failErrors.append("\nSIXTH TEST: { ").append(ex).append(" }: EXCEPTION REPORT: \n\n");
 
       CharArrayWriter writer = new CharArrayWriter();
       e.printStackTrace(new PrintWriter(writer));
@@ -413,7 +407,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
         System.out.println();
 
         throw new AssertionError("Different result from test 5 and 6 (Compiled to Compiled+DebuggingSymbols) [first: "
-            + valueOf(fifth) + "; second: " + valueOf(sixth) + "]");
+            + fifth + "; second: " + sixth + "]");
       }
     }
 
@@ -422,7 +416,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
     }
     catch (Exception e) {
       if (failErrors == null) failErrors = new StringAppender();
-      failErrors.append("\nSEVENTH TEST: { " + ex + " }: EXCEPTION REPORT: \n\n");
+      failErrors.append("\nSEVENTH TEST: { ").append(ex).append(" }: EXCEPTION REPORT: \n\n");
 
       CharArrayWriter writer = new CharArrayWriter();
       e.printStackTrace(new PrintWriter(writer));
@@ -433,7 +427,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
     if (seventh != null && !seventh.getClass().isArray()) {
       if (!seventh.equals(sixth)) {
         throw new AssertionError("Different result from test 4 and 5 (Compiled Re-Run / Reflective) [first: "
-            + valueOf(first) + "; second: " + valueOf(second) + "]");
+            + first + "; second: " + second + "]");
       }
     }
 
@@ -443,7 +437,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
     }
     catch (Exception e) {
       if (failErrors == null) failErrors = new StringAppender();
-      failErrors.append("\nEIGHTH TEST (Serializability): { " + ex + " }: EXCEPTION REPORT: \n\n");
+      failErrors.append("\nEIGHTH TEST (Serializability): { ").append(ex).append(" }: EXCEPTION REPORT: \n\n");
 
       CharArrayWriter writer = new CharArrayWriter();
       e.printStackTrace(new PrintWriter(writer));
@@ -454,14 +448,14 @@ public abstract class AbstractTest extends BaseMvelTestCase {
     if (eighth != null && !eighth.getClass().isArray()) {
       if (!eighth.equals(seventh)) {
         throw new AssertionError("Different result from test 7 and 8 (Compiled Re-Run / Reflective) [first: "
-            + valueOf(first) + "; second: " + valueOf(second) + "]");
+            + first + "; second: " + second + "]");
       }
     }
 
 
     if (failErrors.length() > 0) {
       System.out.println(decompile(compiledD));
-      throw new AssertionError("Detailed Failure Report:\n" + failErrors.toString());
+      throw new AssertionError("Detailed Failure Report:\n" + failErrors);
     }
 
     return fourth;
@@ -856,12 +850,11 @@ public abstract class AbstractTest extends BaseMvelTestCase {
   public static void assertNumEquals(Object obj, Object obj2, boolean permitRoundingVariance) {
     if (obj == null || obj2 == null) throw new AssertionError("null value");
 
-
     if (obj.getClass().equals(obj2.getClass())) {
       if (obj instanceof Number) {
         double compare = ((Number) obj).doubleValue() - ((Number) obj2).doubleValue();
         if (!(compare <= 0.0001d && compare >= -0.0001d)) {
-          throw new AssertionFailedError("expected <" + String.valueOf(obj) + "> but was <" + String.valueOf(obj) + ">");
+          throw new AssertionFailedError("expected <" + obj + "> but was <" + obj + ">");
         }
       }
       else {
@@ -883,7 +876,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
           throw new AssertionFailedError("expected <" + String.valueOf(obj) + "> but was <" + String.valueOf(obj) + ">");
         }
       }
-
     }
   }
+
 }

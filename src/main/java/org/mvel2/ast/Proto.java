@@ -69,7 +69,7 @@ public class Proto extends ASTNode {
     private ReceiverType type;
     private Object receiver;
     private ExecutableStatement initValue;
-    private ProtoInstance instance;
+    private final ProtoInstance instance;
 
     public Receiver(ProtoInstance protoInstance, ReceiverType type, Object receiver) {
       this.instance = protoInstance;
@@ -77,13 +77,14 @@ public class Proto extends ASTNode {
       this.receiver = receiver;
     }
 
-    public Receiver(ProtoInstance protoInstance, ReceiverType type, ExecutableStatement stmt) {
+    public Receiver(@Nullable ProtoInstance protoInstance, ReceiverType type, ExecutableStatement stmt) {
       this.instance = protoInstance;
       this.type = type;
       this.initValue = stmt;
     }
 
-    public Object call(@Nullable Object ctx, Object thisCtx, VariableResolverFactory factory, Object[] parms) {
+    @Override
+		public Object call(@Nullable Object ctx, Object thisCtx, @Nullable VariableResolverFactory factory, Object[] parms) {
       switch (type) {
         case FUNCTION:
           return ((Function) receiver).call(ctx, thisCtx, new InvokationContextFactory(factory, instance.instanceStates), parms);
@@ -115,9 +116,9 @@ public class Proto extends ASTNode {
   }
 
   public class ProtoInstance implements Map<String, Receiver> {
-    private Proto protoType;
-    private VariableResolverFactory instanceStates;
-    private SimpleIndexHashMapWrapper<String, Receiver> receivers;
+    private final Proto protoType;
+    private final VariableResolverFactory instanceStates;
+    private final SimpleIndexHashMapWrapper<String, Receiver> receivers;
 
     public ProtoInstance(Proto protoType, Object ctx, Object thisCtx, VariableResolverFactory factory) {
       this.protoType = protoType;
@@ -307,7 +308,7 @@ public class Proto extends ASTNode {
   public class ProtoResolver implements VariableResolver {
     private String name;
     private Class<?> knownType;
-    private Map<String, Object> variableMap;
+    private final Map<String, Object> variableMap;
 
     public ProtoResolver(Map<String, Object> variableMap, String name) {
       this.variableMap = variableMap;
@@ -324,19 +325,23 @@ public class Proto extends ASTNode {
       this.name = name;
     }
 
-    public void setStaticType(Class knownType) {
+    @Override
+		public void setStaticType(Class knownType) {
       this.knownType = knownType;
     }
 
-    public String getName() {
+    @Override
+		public String getName() {
       return name;
     }
 
-    public Class getType() {
+    @Override
+		public Class getType() {
       return knownType;
     }
 
-    public void setValue(Object value) {
+    @Override
+		public void setValue(Object value) {
       if (knownType != null && value != null && value.getClass() != knownType) {
         if (!canConvert(knownType, value.getClass())) {
           throw new CompileException("cannot assign " + value.getClass().getName() + " to type: "

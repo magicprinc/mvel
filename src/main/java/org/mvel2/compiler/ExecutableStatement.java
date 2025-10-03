@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.mvel2.compiler;
 
 import org.jspecify.annotations.Nullable;
@@ -24,25 +23,29 @@ import org.mvel2.integration.VariableResolverFactory;
 import java.io.Serializable;
 
 public interface ExecutableStatement extends Accessor, Serializable, Cloneable {
-  public Object getValue(@Nullable Object staticContext, @Nullable VariableResolverFactory factory);
+	ExecutableStatement[] EMPTY_EXECUTABLE_STATEMENT = new ExecutableStatement[0];
 
-  public void setKnownIngressType(Class type);
+  Object getValue (@Nullable Object staticContext, @Nullable VariableResolverFactory factory);
 
-  public void setKnownEgressType(Class type);
+  void setKnownIngressType (Class<?> type);
 
-  public Class getKnownIngressType();
+  void setKnownEgressType (Class<?> type);
 
-  public Class getKnownEgressType();
+  Class<?> getKnownIngressType ();
 
-  public boolean isExplicitCast();
+  @Override
+	Class<?> getKnownEgressType ();
 
-  public boolean isConvertableIngressEgress();
+  boolean isExplicitCast ();
 
-  public void computeTypeConversionRule();
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+	boolean isConvertableIngressEgress ();
 
-  public boolean intOptimized();
+  void computeTypeConversionRule ();
 
-  public boolean isLiteralOnly();
+  boolean intOptimized ();
 
-  public boolean isEmptyStatement();
+  boolean isLiteralOnly ();
+
+  boolean isEmptyStatement ();
 }

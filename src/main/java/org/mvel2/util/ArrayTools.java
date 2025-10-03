@@ -20,6 +20,7 @@ package org.mvel2.util;
 public final class ArrayTools {
 	public static final char[] EMPTY_CHAR = new char[0];
 	public static final String[] EMPTY_STR = new String[0];
+	/// EMPTYARG
 	public static final Object[] EMPTY_OBJ = new Object[0];
 	public static final Class<?>[] EMPTY_CLASS = new Class[0];
 

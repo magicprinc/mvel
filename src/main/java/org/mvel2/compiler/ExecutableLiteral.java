@@ -18,6 +18,7 @@
 
 package org.mvel2.compiler;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.ast.Safe;
 import org.mvel2.integration.VariableResolverFactory;
 
@@ -25,7 +26,7 @@ import org.mvel2.integration.VariableResolverFactory;
  * @author Christopher Brock
  */
 public class ExecutableLiteral implements ExecutableStatement, Safe {
-  private Object literal;
+  private final Object literal;
   private int integer32;
   private boolean intOptimized;
 
@@ -46,35 +47,43 @@ public class ExecutableLiteral implements ExecutableStatement, Safe {
     this.integer32 = integer32;
   }
 
-  public Object getValue(Object staticContext, VariableResolverFactory factory) {
+  @Override
+	public Object getValue(Object staticContext, VariableResolverFactory factory) {
     return literal;
   }
 
-  public void setKnownIngressType(Class type) {
+  @Override
+	public void setKnownIngressType (Class<?> type) {
 
   }
 
-  public void setKnownEgressType(Class type) {
+  @Override
+	public void setKnownEgressType (Class<?> type) {
 
   }
 
-  public Class getKnownIngressType() {
+  @Override
+	public @Nullable Class<?> getKnownIngressType() {
     return null;
   }
 
-  public Class getKnownEgressType() {
+  @Override
+	public Class<?> getKnownEgressType() {
     return this.literal == null ? Object.class : this.literal.getClass();
   }
 
-  public boolean isConvertableIngressEgress() {
+  @Override
+	public boolean isConvertableIngressEgress() {
     return false;
   }
 
-  public void computeTypeConversionRule() {
+  @Override
+	public void computeTypeConversionRule() {
 
   }
 
-  public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
+  @Override
+	public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
     return literal;
   }
 
@@ -83,25 +92,30 @@ public class ExecutableLiteral implements ExecutableStatement, Safe {
     return literal;
   }
 
-  public boolean intOptimized() {
+  @Override
+	public boolean intOptimized() {
     return intOptimized;
   }
 
 
-  public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+  @Override
+	public @Nullable Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
     // not implemented
     return null;
   }
 
-  public boolean isLiteralOnly() {
+  @Override
+	public boolean isLiteralOnly() {
     return true;
   }
 
-  public boolean isEmptyStatement() {
+  @Override
+	public boolean isEmptyStatement() {
     return false;
   }
 
-  public boolean isExplicitCast() {
+  @Override
+	public boolean isExplicitCast() {
     return false;
   }
 }

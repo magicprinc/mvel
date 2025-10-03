@@ -659,12 +659,12 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
             if (pCtx!=null&& pCtx.getParserConfiguration()!=null?pCtx.getParserConfiguration().isAllowNakedMethCall():MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
               o = m.invoke(null, EMPTY_OBJ);
               if (hasNullMethodHandler()) {
-                addAccessorNode(new MethodAccessorNH(m, new ExecutableStatement[0], getNullMethodHandler()));
+                addAccessorNode(new MethodAccessorNH(m, ExecutableStatement.EMPTY_EXECUTABLE_STATEMENT, getNullMethodHandler()));
                 if (o == null)
-                  o = getNullMethodHandler().getProperty(m.getName(), ctx, variableFactory);
+                  	o = getNullMethodHandler().getProperty(m.getName(), ctx, variableFactory);
               }
               else {
-                addAccessorNode(new MethodAccessor(m, new ExecutableStatement[0]));
+                addAccessorNode(new MethodAccessor(m, ExecutableStatement.EMPTY_EXECUTABLE_STATEMENT));
               }
               return o;
             }
@@ -1266,7 +1266,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       Constructor cns = getBestConstructorCandidate(parms, cls, pCtx.isStrongTyping());
 
       if (cns == null) {
-        StringBuilder error = new StringBuilder();
+        var error = new StringBuilder();
         for (int i = 0; i < parms.length; i++) {
           error.append(parms[i].getClass().getName());
           if (i + 1 < parms.length) error.append(", ");

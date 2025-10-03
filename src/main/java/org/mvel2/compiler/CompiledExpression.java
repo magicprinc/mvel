@@ -40,13 +40,13 @@ public class CompiledExpression implements Serializable, ExecutableStatement {
   private boolean optimized = false;
   private final boolean literalOnly;
 
-  private final String sourceName;
+  //?private final String sourceName;
 
   private final ParserConfiguration parserConfiguration;
 
   public CompiledExpression(ASTLinkedList astMap, String sourceName, Class egressType, ParserConfiguration parserConfiguration, boolean literalOnly) {
     this.firstNode = astMap.firstNode();
-    this.sourceName = sourceName;
+    //this.sourceName = sourceName;
     this.knownEgressType = astMap.isSingleNode() ? astMap.firstNonSymbol().getEgressType() : egressType;
     this.literalOnly = literalOnly;
     this.parserConfiguration = parserConfiguration;
@@ -60,33 +60,39 @@ public class CompiledExpression implements Serializable, ExecutableStatement {
     return firstNode != null && firstNode.nextASTNode == null;
   }
 
-  public Class getKnownEgressType() {
+  @Override
+	public Class getKnownEgressType() {
     return knownEgressType;
   }
 
-  public void setKnownEgressType(Class knownEgressType) {
+  @Override
+	public void setKnownEgressType(Class knownEgressType) {
     this.knownEgressType = knownEgressType;
   }
 
-  public Class getKnownIngressType() {
+  @Override
+	public Class getKnownIngressType() {
     return knownIngressType;
   }
 
-  public void setKnownIngressType(Class knownIngressType) {
+  @Override
+	public void setKnownIngressType(Class knownIngressType) {
     this.knownIngressType = knownIngressType;
   }
 
-  public boolean isConvertableIngressEgress() {
+  @Override
+	public boolean isConvertableIngressEgress() {
     return convertableIngressEgress;
   }
 
-  public void computeTypeConversionRule() {
-    if (knownIngressType != null && knownEgressType != null) {
+  @Override
+	public void computeTypeConversionRule() {
+    if (knownIngressType != null && knownEgressType != null)
       convertableIngressEgress = knownIngressType.isAssignableFrom(knownEgressType);
-    }
   }
 
-  public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
+  @Override
+	public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
     if (!optimized) {
       setupOptimizers();
       try {
@@ -99,7 +105,8 @@ public class CompiledExpression implements Serializable, ExecutableStatement {
     return getValue(ctx, variableFactory);
   }
 
-  public Object getValue(@Nullable Object staticContext, @Nullable VariableResolverFactory factory) {
+  @Override
+	public Object getValue(@Nullable Object staticContext, @Nullable VariableResolverFactory factory) {
     if (!optimized) {
       setupOptimizers();
       try {
@@ -120,7 +127,8 @@ public class CompiledExpression implements Serializable, ExecutableStatement {
     optimized = true;
   }
 
-  public boolean intOptimized() {
+  @Override
+	public boolean intOptimized() {
     return false;
   }
 
@@ -136,15 +144,18 @@ public class CompiledExpression implements Serializable, ExecutableStatement {
     return null;
   }
 
-  public boolean isLiteralOnly() {
+  @Override
+	public boolean isLiteralOnly() {
     return literalOnly;
   }
 
-  public boolean isEmptyStatement() {
+  @Override
+	public boolean isEmptyStatement() {
     return firstNode == null;
   }
 
-  public boolean isExplicitCast() {
+  @Override
+	public boolean isExplicitCast() {
     return firstNode != null && firstNode instanceof TypeCast;
   }
 

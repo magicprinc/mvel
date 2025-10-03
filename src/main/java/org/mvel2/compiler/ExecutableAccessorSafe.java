@@ -18,6 +18,7 @@
 
 package org.mvel2.compiler;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.ast.ASTNode;
 import org.mvel2.ast.Safe;
 import org.mvel2.ast.TypeCast;
@@ -25,7 +26,7 @@ import org.mvel2.integration.VariableResolverFactory;
 
 
 public class ExecutableAccessorSafe implements ExecutableStatement, Safe {
-  private ASTNode node;
+  private final ASTNode node;
 
   private Class ingress;
   private Class egress;
@@ -44,37 +45,45 @@ public class ExecutableAccessorSafe implements ExecutableStatement, Safe {
     return node.getReducedValueAccelerated(ctx, elCtx, variableFactory);
   }
 
-  public Object getValue(Object staticContext, VariableResolverFactory factory) {
+  @Override
+	public Object getValue(Object staticContext, VariableResolverFactory factory) {
     return node.getReducedValueAccelerated(staticContext, staticContext, factory);
   }
 
-  public void setKnownIngressType(Class type) {
+  @Override
+	public void setKnownIngressType(Class type) {
     this.ingress = type;
   }
 
-  public void setKnownEgressType(Class type) {
+  @Override
+	public void setKnownEgressType(Class type) {
     this.egress = type;
   }
 
-  public Class getKnownIngressType() {
+  @Override
+	public Class getKnownIngressType() {
     return ingress;
   }
 
-  public Class getKnownEgressType() {
+  @Override
+	public Class getKnownEgressType() {
     return egress;
   }
 
-  public boolean isConvertableIngressEgress() {
+  @Override
+	public boolean isConvertableIngressEgress() {
     return convertable;
   }
 
-  public void computeTypeConversionRule() {
+  @Override
+	public void computeTypeConversionRule() {
     if (ingress != null && egress != null) {
       convertable = ingress.isAssignableFrom(egress);
     }
   }
 
-  public boolean intOptimized() {
+  @Override
+	public boolean intOptimized() {
     return false;
   }
 
@@ -82,19 +91,23 @@ public class ExecutableAccessorSafe implements ExecutableStatement, Safe {
     return node;
   }
 
-  public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+  @Override
+	public @Nullable Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
     return null;
   }
 
-  public boolean isLiteralOnly() {
+  @Override
+	public boolean isLiteralOnly() {
     return false;
   }
 
-  public boolean isEmptyStatement() {
+  @Override
+	public boolean isEmptyStatement() {
     return node == null;
   }
 
-  public boolean isExplicitCast() {
+  @Override
+	public boolean isExplicitCast() {
     return node != null && node instanceof TypeCast;
   }
 }

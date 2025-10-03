@@ -957,7 +957,7 @@ public class ParseTools {
     return appendFactory(factory, new ClassImportResolverFactory(null, null, false));
   }
 
-  public static Class findClass(VariableResolverFactory factory, String name, ParserContext pCtx) throws ClassNotFoundException {
+  public static Class findClass(@Nullable VariableResolverFactory factory, String name, ParserContext pCtx) throws ClassNotFoundException {
     try {
       if (LITERALS.containsKey(name)) {
         return (Class) LITERALS.get(name);
