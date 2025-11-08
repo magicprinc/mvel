@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,10 @@ public class MvelAITest {
 		String expression = "10 + 5 * 2";
 		Object result = MVEL.eval(expression);
 		assertEquals(20, result);
+
+		Serializable compiled = MVEL.compileExpression(expression);
+		result = MVEL.executeExpression(compiled);
+		assertEquals(20, result);
 	}
 
 	@Test
@@ -32,23 +37,39 @@ public class MvelAITest {
 		vars.put("x", 10);
 		vars.put("y", 5);
 
-		Object result = MVEL.eval("x + y", vars);
+		String expression = "x + y";
+		Object result = MVEL.eval(expression, vars);
+		assertEquals(15, result);
+
+		Serializable compiled = MVEL.compileExpression(expression);
+		result = MVEL.executeExpression(compiled, vars);
 		assertEquals(15, result);
 	}
 
 	@Test
 	public void testStringOperations() {
 		Map<String, Object> vars = Map.of("name", "John");
-		Object result = MVEL.eval("name + ' Doe'", vars);
+		String expression = "name + ' Doe'";
+		Object result = MVEL.eval(expression, vars);
+		assertEquals("John Doe", result);
+
+		Serializable compiled = MVEL.compileExpression(expression);
+		result = MVEL.executeExpression(compiled, vars);
 		assertEquals("John Doe", result);
 	}
 
+	public record Person(String name, int age) {}
+
 	@Test
 	public void testPropertyAccess() {
-		record Person(String name, int age) {}
 
 		Map<String, Object> vars = Map.of("person", new Person("Alice", 30));
-		Object result = MVEL.eval("person.name", vars);
+		String expression = "person.name";
+		Object result = MVEL.eval(expression, vars);
+		assertEquals("Alice", result);
+
+		Serializable compiled = MVEL.compileExpression(expression);
+		result = MVEL.executeExpression(compiled, vars);
 		assertEquals("Alice", result);
 	}
 
@@ -57,7 +78,12 @@ public class MvelAITest {
 		List<Integer> numbers = List.of(1, 2, 3, 4, 5);
 		Map<String, Object> vars = Map.of("numbers", numbers);
 
-		Object result = MVEL.eval("numbers[2]", vars);
+		String expression = "numbers[2]";
+		Object result = MVEL.eval(expression, vars);
+		assertEquals(3, result);
+
+		Serializable compiled = MVEL.compileExpression(expression);
+		result = MVEL.executeExpression(compiled, vars);
 		assertEquals(3, result);
 	}
 
@@ -66,32 +92,52 @@ public class MvelAITest {
 		Map<String, String> data = Map.of("key1", "value1", "key2", "value2");
 		Map<String, Object> vars = Map.of("data", data);
 
-		Object result = MVEL.eval("data['key1']", vars);
+		String expression = "data['key1']";
+		Object result = MVEL.eval(expression, vars);
+		assertEquals("value1", result);
+
+		Serializable compiled = MVEL.compileExpression(expression);
+		result = MVEL.executeExpression(compiled, vars);
 		assertEquals("value1", result);
 	}
 
 	@Test
 	public void testConditionalExpression() {
 		Map<String, Object> vars = Map.of("age", 25);
-		Object result = MVEL.eval("age >= 18 ? 'adult' : 'minor'", vars);
+		String expression = "age >= 18 ? 'adult' : 'minor'";
+		Object result = MVEL.eval(expression, vars);
+		assertEquals("adult", result);
+
+		Serializable compiled = MVEL.compileExpression(expression);
+		result = MVEL.executeExpression(compiled, vars);
 		assertEquals("adult", result);
 	}
 
 	@Test
 	public void testBooleanLogic() {
 		Map<String, Object> vars = Map.of("x", 10, "y", 20);
-		Object result = MVEL.eval("x > 5 && y < 30", vars);
+		String expression = "x > 5 && y < 30";
+		Object result = MVEL.eval(expression, vars);
+		assertEquals(true, result);
+
+		Serializable compiled = MVEL.compileExpression(expression);
+		result = MVEL.executeExpression(compiled, vars);
 		assertEquals(true, result);
 	}
 
 	@Test
 	public void testMethodInvocation() {
 		Map<String, Object> vars = Map.of("text", "hello world");
-		Object result = MVEL.eval("text.toUpperCase()", vars);
+		String expression = "text.toUpperCase()";
+		Object result = MVEL.eval(expression, vars);
+		assertEquals("HELLO WORLD", result);
+
+		Serializable compiled = MVEL.compileExpression(expression);
+		result = MVEL.executeExpression(compiled, vars);
 		assertEquals("HELLO WORLD", result);
 	}
 
-	@Test
+	@Test  @SuppressWarnings("unchecked")
 	public void testCollectionProjection() {
 		List<Product> products = List.of(
 			new Product("Laptop", 999.99),
@@ -100,9 +146,12 @@ public class MvelAITest {
 		);
 
 		Map<String, Object> vars = Map.of("products", products);
-		@SuppressWarnings("unchecked")
-		List<String> result = (List<String>) MVEL.eval("(name in products)", vars);
+		String expression = "(name in products)";
+		List<String> result = (List<String>) MVEL.eval(expression, vars);
+		assertEquals(List.of("Laptop", "Mouse", "Keyboard"), result);
 
+		Serializable compiled = MVEL.compileExpression(expression);
+		result = (List<String>) MVEL.executeExpression(compiled, vars);
 		assertEquals(List.of("Laptop", "Mouse", "Keyboard"), result);
 	}
 	public static class Product {
@@ -110,8 +159,7 @@ public class MvelAITest {
 		double price;
 
 		public Product (String name, double price) {
-			this.name = name;
-			this.price = price;
+			this.name = name;  this.price = price;
 		}
 
 		public String getName (){ return name; }
@@ -130,14 +178,24 @@ public class MvelAITest {
 
 	@Test
 	public void testInlineList() {
-		Object result = MVEL.eval("[1, 2, 3, 4]");
+		String expression = "[1, 2, 3, 4]";
+		Object result = MVEL.eval(expression);
 		assertEquals(List.of(1, 2, 3, 4), result);
+
+		Serializable compiled = MVEL.compileExpression(expression);
+		assertEquals(List.of(1, 2, 3, 4), MVEL.executeExpression(compiled));
 	}
 
-	@Test
+	@Test  @SuppressWarnings("unchecked")
 	public void testInlineMap() {
-		@SuppressWarnings("unchecked")
-		Map<String, Object> result = (Map<String, Object>) MVEL.eval("['name': 'John', 'age': 30]");
+		String expression = "['name': 'John', 'age': 30]";
+
+		Map<String, Object> result = (Map<String, Object>) MVEL.eval(expression);
+		assertEquals("John", result.get("name"));
+		assertEquals(30, result.get("age"));
+
+		Serializable compiled = MVEL.compileExpression(expression);
+		result = (Map<String, Object>) MVEL.executeExpression(compiled);
 		assertEquals("John", result.get("name"));
 		assertEquals(30, result.get("age"));
 	}
