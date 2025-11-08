@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("EqualsHashCode")
 public class Base {
   public String data = "cat";
   public String number = "101";
@@ -39,7 +40,7 @@ public class Base {
     list.add("Joy");
     list.add("Joy!");
 
-    this.array = (String[]) this.list.toArray(new String[this.list.size()]);
+    this.array = this.list.toArray(new String[this.list.size()]);
 
     things = new ArrayList<Thing>();
     things.add(new Thing("Bob"));

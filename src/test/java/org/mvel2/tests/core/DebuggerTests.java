@@ -121,7 +121,7 @@ public class DebuggerTests extends AbstractTest {
     ctx.setDebugSymbols( true );
 
     ExpressionCompiler compiler = new ExpressionCompiler("a = 5;\nb = 5;\n\nif (a == b) {\n\nSystem.out.println('Good');\nreturn a + b;\n}\n", ctx);
-    System.out.println("-------\n" + compiler.getExpression() + "\n-------\n");
+    System.out.println("-------\n" + new String(compiler.getExpression()) + "\n-------\n");
     CompiledExpression compiled = compiler.compile();
 
     MVELRuntime.registerBreakpoint("test.mv", 7);
@@ -237,9 +237,9 @@ public class DebuggerTests extends AbstractTest {
 
     final Set<Integer> linesEncountered = new HashSet<Integer>();
 
-    Debugger testDebugger = new Debugger() {
-
-      public int onBreak(Frame frame) {
+    var testDebugger = new Debugger() {
+      @Override
+			public int onBreak(Frame frame) {
         linesEncountered.add(frame.getLineNumber());
 
         System.out.println("Breakpoint Encountered [source:" + frame.getSourceName() + "; line:" + frame.getLineNumber() + "]");
@@ -282,8 +282,9 @@ public class DebuggerTests extends AbstractTest {
 
     final Set<Integer> breaked = new HashSet<Integer>();
 
-    Debugger testDebugger = new Debugger() {
-      public int onBreak(Frame frame) {
+    var testDebugger = new Debugger() {
+      @Override
+			public int onBreak(Frame frame) {
         System.out.println("Breakpoint [source:" + frame.getSourceName() + "; line:" + frame.getLineNumber() + "]");
         breaked.add(frame.getLineNumber());
         return 0;
@@ -359,13 +360,11 @@ public class DebuggerTests extends AbstractTest {
 
     final Set<Integer> breaked = new HashSet<Integer>();
 
-    Debugger testDebugger = new Debugger() {
-      public int onBreak(Frame frame) {
-        System.out.println("Breakpoint [source:" + frame.getSourceName() + "; line:" + frame.getLineNumber() + "]");
-        breaked.add(frame.getLineNumber());
-        return 0;
-      }
-    };
+    Debugger testDebugger = frame->{
+			System.out.println("Breakpoint [source:" + frame.getSourceName() + "; line:" + frame.getLineNumber() + "]");
+			breaked.add(frame.getLineNumber());
+			return 0;
+		};
 
 
     MVELRuntime.setThreadDebugger(testDebugger);

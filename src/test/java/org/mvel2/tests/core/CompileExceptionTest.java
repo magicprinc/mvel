@@ -4,10 +4,10 @@ import org.mvel2.CompileException;
 
 public class CompileExceptionTest extends AbstractTest{
     public void testNoExceptionThrownWhenCreatingCompileExceptionWithCursorLessThanZero() {
-        CompileException ex = new CompileException("Dummy message!", "Dummy expression!".toCharArray(), -1);
+        var ex = new CompileException("Dummy message!", "Dummy expression!".toCharArray(), -1);
         try {
-            ex.getMessage();
-            ex.toString();
+            var m = ex.getMessage();
+            var x = ex.toString();
         } catch(StringIndexOutOfBoundsException oob) {
             fail("Should not throw exception even if cursor is less than 0!");
         }

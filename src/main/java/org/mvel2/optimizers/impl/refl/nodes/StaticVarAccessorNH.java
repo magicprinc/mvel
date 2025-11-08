@@ -27,22 +27,21 @@ import java.lang.reflect.Field;
 
 public class StaticVarAccessorNH implements AccessorNode {
   private AccessorNode nextNode;
-  Field field;
-  private PropertyHandler nullHandler;
+  final Field field;
+  private final PropertyHandler nullHandler;
 
-  public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
+  @Override
+	public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
     try {
       Object v = field.get(ctx);
       if (v == null) v = nullHandler.getProperty(field.getName(), elCtx, vars);
 
-      if (nextNode != null) {
-        return nextNode.getValue(v, elCtx, vars);
-      }
-      else {
-        return v;
-      }
+      if (nextNode != null)
+	        return nextNode.getValue(v, elCtx, vars);
+      else
+        	return v;
     }
-    catch (Exception e) {
+    catch (Exception e){
       throw new OptimizationFailure("unable to access static field", e);
     }
   }
@@ -52,30 +51,29 @@ public class StaticVarAccessorNH implements AccessorNode {
     this.nullHandler = handler;
   }
 
-  public AccessorNode getNextNode() {
-    return nextNode;
-  }
+  @Override public AccessorNode getNextNode (){ return nextNode; }
 
-  public AccessorNode setNextNode(AccessorNode nextNode) {
+  @Override
+	public AccessorNode setNextNode(AccessorNode nextNode) {
     return this.nextNode = nextNode;
   }
 
-  public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+  @Override
+	public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
     try {
-      if (nextNode == null) {
-        field.set(null, value);
-      }
-      else {
-        return nextNode.setValue(field.get(null), elCtx, variableFactory, value);
-      }
+      if (nextNode == null)
+        	field.set(null, value);
+      else
+        	return nextNode.setValue(field.get(null), elCtx, variableFactory, value);
     }
-    catch (Exception e) {
+    catch (Exception e){
       throw new RuntimeException("error accessing static variable", e);
     }
     return value;
   }
 
-  public Class getKnownEgressType() {
-    return field.getClass();
+  @Override
+	public Class<?> getKnownEgressType() {
+    return field.getType();
   }
 }

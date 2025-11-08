@@ -1955,7 +1955,7 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
 
       if (parameterTypes != null) {
         for (int i = 0; i < args.length; i++) {
-          errorBuild.append(parameterTypes[i] != null ? parameterTypes[i].getClass().getName() : null);
+          errorBuild.append(parameterTypes[i] != null ? parameterTypes[i].getName() : null);
           if (i < args.length - 1) errorBuild.append(", ");
         }
       }
@@ -1971,7 +1971,7 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
       }
 
       throw new CompileException("unable to resolve method: " + cls.getName() + "."
-          + name + "(" + errorBuild.toString() + ") [arglength=" + args.length + "]", expr, st);
+          + name +"("+ errorBuild + ") [arglength=" + args.length + "]", expr, st);
     }
     else {
       m = getWidenedTarget(m);
@@ -2975,7 +2975,7 @@ public class ASMAccessorOptimizer extends AbstractOptimizer implements AccessorO
         type = int.class;
       }
       else if (desiredTarget != null && desiredTarget != type) {
-        assert debug("*** Converting because desiredType(" + desiredTarget.getClass() + ") is not: " + type);
+        assert debug("*** Converting because desiredType(" + desiredTarget + ") is not: " + type);
 
 
         if (!DataConversion.canConvert(type, desiredTarget)) {

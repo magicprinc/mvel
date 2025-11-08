@@ -19,42 +19,43 @@
 package org.mvel2.compiler;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Map;
 
 import static java.lang.String.valueOf;
-import static java.lang.reflect.Array.getLength;
 import static org.mvel2.util.ParseTools.isNumeric;
 
-public class BlankLiteral implements Serializable {
+public final class BlankLiteral implements Serializable {
   public static final BlankLiteral INSTANCE = new BlankLiteral();
 
-  public BlankLiteral() {
-  }
+  private BlankLiteral (){}
 
-  public boolean equals(Object obj) {
-    if (obj == null || valueOf(obj).trim().length() == 0) {
+  @Override
+	public boolean equals (Object obj) {
+		final String s;
+    if (obj == null || (s = valueOf(obj).trim()).length() == 0){
       return true;
     }
     if (isNumeric(obj)) {
-      return "0".equals(valueOf(obj));
+      return "0".equals(s);
     }
-    if (obj instanceof Collection) {
-      return ((Collection) obj).size() == 0;
+    if (obj instanceof Collection<?>c){
+      return c.isEmpty();
     }
     if (obj.getClass().isArray()) {
-      return getLength(obj) == 0;
+      return Array.getLength(obj) == 0;
     }
-    if (obj instanceof Boolean) {
-      return !(Boolean)obj;
+    if (obj instanceof Boolean b){
+      return !b;
     }
-    if (obj instanceof Map) {
-      return ((Map) obj).size() == 0;
+    if (obj instanceof Map<?,?> m){
+      return m.isEmpty();
     }
     return false;
   }
 
-  public String toString() {
-    return "";
-  }
+	@Override public int hashCode (){ return 0; }
+
+	@Override public String toString (){ return ""; }
 }

@@ -103,7 +103,7 @@ public abstract class AbstractTest extends BaseMvelTestCase {
     return map;
   }
 
-
+	@SuppressWarnings("DoNotCall")
   protected Object test(final String ex) {
     Thread[] threads;
 
@@ -133,15 +133,15 @@ public abstract class AbstractTest extends BaseMvelTestCase {
       System.out.println("----------------------");
     }
 
-    for (Thread thread1 : threads) {
-      if (threads.length > 1) {
-        System.out.println("Start Thread.");
-        thread1.setPriority(Thread.MIN_PRIORITY);
-        thread1.start();
-      }
-      else {
-        thread1.run();
-      }
+		System.out.println("Start Threads");
+    if (threads.length > 1) {
+			for (Thread t : threads){
+				t.setPriority(Thread.MIN_PRIORITY);
+				t.start();
+			}
+    } else if (threads.length > 0){
+			//noinspection CallToThreadRun
+			threads[0].run();
     }
 
     if (threads.length > 1) {

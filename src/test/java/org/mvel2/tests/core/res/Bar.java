@@ -3,12 +3,13 @@ package org.mvel2.tests.core.res;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("EqualsHashCode")
 public class Bar {
   private String name = "dog";
   private boolean woof = true;
   private int age = 14;
   private String assignTest = "";
-  private List<Integer> testList = new ArrayList<Integer>();
+  private List<Integer> testList = new ArrayList<>();
   private Integer[] intarray = new Integer[1];
 
   public String getName() {
@@ -72,7 +73,8 @@ public class Bar {
     this.intarray = intarray;
   }
 
-  public boolean equals(Object o) {
+  @Override
+	public boolean equals(Object o) {
     return o instanceof Bar;
   }
 }

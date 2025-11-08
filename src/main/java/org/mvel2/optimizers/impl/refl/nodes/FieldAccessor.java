@@ -40,7 +40,8 @@ public class FieldAccessor implements AccessorNode {
     primitive = (this.field = field).getType().isPrimitive();
   }
 
-  public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
+  @Override
+	public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
     try {
       if (nextNode != null) {
         return nextNode.getValue(field.get(ctx), elCtx, vars);
@@ -54,7 +55,8 @@ public class FieldAccessor implements AccessorNode {
     }
   }
 
-  public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+  @Override
+	public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
     if (nextNode != null) {
       try {
         return nextNode.setValue(field.get(ctx), elCtx, variableFactory, value == null && primitive ? PropertyTools.getPrimitiveInitialValue(field.getType()) : value);
@@ -65,12 +67,12 @@ public class FieldAccessor implements AccessorNode {
     }
 
     // this local field is required to make sure exception block works with the same coercionRequired value
-    // and it is not changed by another thread while setter is invoked 
+    // and it is not changed by another thread while setter is invoked
     boolean attemptedCoercion = coercionRequired;
     try {
 
       if (coercionRequired) {
-        field.set(ctx, value = convert(ctx, field.getClass()));
+        field.set(ctx, value = convert(ctx, field.getType()));
         return value;
       }
       else {
@@ -90,23 +92,18 @@ public class FieldAccessor implements AccessorNode {
     }
   }
 
-  public Field getField() {
-    return field;
-  }
+  public Field getField (){ return field; }
+  //public void setField(Field field){ this.field = field;}
 
-  public void setField(Field field) {
-    this.field = field;
-  }
+  @Override public AccessorNode getNextNode (){ return nextNode; }
 
-  public AccessorNode getNextNode() {
-    return nextNode;
-  }
-
-  public AccessorNode setNextNode(AccessorNode nextNode) {
+  @Override
+	public AccessorNode setNextNode(AccessorNode nextNode) {
     return this.nextNode = nextNode;
   }
 
-  public Class getKnownEgressType() {
-    return field.getClass();
+  @Override
+	public Class<?> getKnownEgressType() {
+    return field.getType();
   }
 }

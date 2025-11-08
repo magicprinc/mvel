@@ -18,6 +18,7 @@
  */
 package org.mvel2.optimizers.impl.refl.nodes;
 
+import org.jspecify.annotations.Nullable;
 import org.mvel2.compiler.ExecutableStatement;
 import org.mvel2.integration.VariableResolverFactory;
 
@@ -26,16 +27,15 @@ import java.lang.reflect.Constructor;
 public class ConstructorAccessor extends InvokableAccessor {
   private Constructor constructor;
 
-  public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
+  @Override
+	public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
     try {
       if (!coercionNeeded) {
         try {
-          if (nextNode != null) {
+          if (nextNode != null)
             return nextNode.getValue(constructor.newInstance(executeAll(elCtx, variableFactory)), elCtx, variableFactory);
-          }
-          else {
+          else
             return constructor.newInstance(executeAll(elCtx, variableFactory));
-          }
         }
         catch (IllegalArgumentException e) {
           coercionNeeded = true;
@@ -52,20 +52,20 @@ public class ConstructorAccessor extends InvokableAccessor {
           return constructor.newInstance(executeAndCoerce(parameterTypes, elCtx, variableFactory, constructor.isVarArgs()));
         }
       }
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       throw new RuntimeException("cannot construct object", e);
     }
   }
 
-  public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+  @Override
+	public @Nullable Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
     return null;
   }
 
   private Object[] executeAll(Object ctx, VariableResolverFactory vars) {
-    if (length == 0) return GetterAccessor.EMPTY;
+    if (length <= 0) return GetterAccessor.EMPTY;
 
-    Object[] vals = new Object[length];
+    var vals = new Object[length];
     for (int i = 0; i < length; i++) {
       vals[i] = parms[i].getValue( ctx, vars);
     }
@@ -78,15 +78,11 @@ public class ConstructorAccessor extends InvokableAccessor {
     this.parms = parms;
   }
 
-  public Class getKnownEgressType() {
-    return constructor.getClass();
+  @Override
+	public Class<?> getKnownEgressType() {
+    return constructor.getDeclaringClass();
   }
 
-  public Constructor getConstructor() {
-    return constructor;
-  }
-
-  public ExecutableStatement[] getParameters() {
-    return parms;
-  }
+  //public Constructor getConstructor (){ return constructor; }
+  //public ExecutableStatement[] getParameters (){ return parms; }
 }

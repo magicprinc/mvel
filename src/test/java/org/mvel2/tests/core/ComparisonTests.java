@@ -5,9 +5,7 @@ import org.mvel2.ParserContext;
 import org.mvel2.tests.core.res.Foo;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.Map;
 
 public class ComparisonTests extends AbstractTest {
 
@@ -118,7 +116,7 @@ public class ComparisonTests extends AbstractTest {
   public void testBlank2() {
     assertEquals(true, test("BWAH == empty"));
   }
-  
+
   public void testBlank3() {
     assertEquals(true, _test("[] == empty"));
   }
@@ -134,7 +132,7 @@ public class ComparisonTests extends AbstractTest {
   public void testBlank6() {
     assertEquals(true, _test("empty != ['a']"));
   }
-  
+
   public void testBlank7() {
     assertEquals(false, _test("[] != empty"));
   }
@@ -296,6 +294,7 @@ public class ComparisonTests extends AbstractTest {
     assertEquals(false, MVEL.eval("0<-1"));
   }
 
+	@SuppressWarnings("DoubleBraceInitialization")
   public void testStringCoercionForComparison() {
     assertEquals(false, MVEL.eval("36 > 242"));
     assertEquals(false, MVEL.eval("\"36\" > 242"));

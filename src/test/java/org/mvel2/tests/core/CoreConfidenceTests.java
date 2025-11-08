@@ -58,6 +58,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -73,7 +74,7 @@ import static org.mvel2.MVEL.parseMacros;
 import static org.mvel2.MVEL.setProperty;
 import static org.mvel2.util.ParseTools.loadFromFile;
 
-@SuppressWarnings({"ALL"})
+@SuppressWarnings({"ALL", "DoubleBraceInitialization"})
 public class CoreConfidenceTests extends AbstractTest {
   public void testWhileUsingImports() {
     Map<String, Object> imports = new HashMap<String, Object>();
@@ -82,7 +83,7 @@ public class CoreConfidenceTests extends AbstractTest {
     imports.put("List",
         java.util.List.class);
 
-    ParserContext context = new ParserContext(imports, null, "testfile");
+    var context = new ParserContext(imports, null, "testfile");
     ExpressionCompiler compiler = new ExpressionCompiler("List list = new ArrayList(); return (list == empty)", context);
     assertTrue((Boolean) executeExpression(compiler.compile(),
         new DefaultLocalVariableResolverFactory()));
@@ -3879,7 +3880,12 @@ public class CoreConfidenceTests extends AbstractTest {
     public boolean equals(Object other) {
       return other != null && other instanceof B && value == ((B) other).value;
     }
-  }
+
+		@Override
+		public int hashCode () {
+			return Objects.hashCode(value);
+		}
+	}
 
   public static class MySet {
     private Set<String> set = new HashSet<String>();
@@ -4086,19 +4092,19 @@ public class CoreConfidenceTests extends AbstractTest {
   }
 
   public void testShiftOperator() {
-    String expression = "1 << 65536L";
+    String expression = "1L << 62L";
     Serializable compiled = MVEL.compileExpression(expression, context);
     Object result = MVEL.executeExpression(compiled, new HashMap());
-    assertEquals(1 << 65536L, result);
+    assertEquals(1L << 62L, result);
 
     expression = "one << shift";
     Map map = new HashMap() {{
-      put("one", 1);
-      put("shift", 65536L);
+      put("one", 1L);
+      put("shift", 62L);
     }};
     compiled = MVEL.compileExpression(expression, context);
     result = MVEL.executeExpression(compiled, map);
-    assertEquals(1 << 65536L, result);
+    assertEquals(1L << 62L, result);
     System.out.println(result);
   }
 

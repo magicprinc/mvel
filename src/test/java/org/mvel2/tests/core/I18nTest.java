@@ -1,31 +1,32 @@
 package org.mvel2.tests.core;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.mvel2.MVEL;
 import org.mvel2.tests.BaseMvelTestCase;
 
+import java.util.HashMap;
+import java.util.Map;
+
+@SuppressWarnings("UnicodeInCode")
 public class I18nTest extends BaseMvelTestCase {
-    
+
   public void testI18nProperties() {
     I18nPerson p = new I18nPerson();
     p.set名称("杜甫");
     p.setフラグ(true);
     Map<String, Object> variables = new HashMap<String, Object>();
     variables.put("人", p);
-    
+
     assertTrue((Boolean)MVEL.eval("人.名称 == \"杜甫\"", variables));
-    
+
     // MVEL-300
     assertTrue((Boolean)MVEL.eval("人.フラグ == true", variables));
   }
-  
+
   public class I18nPerson {
-      
+
     private String 名称; // "name" in Chinese
     private boolean フラグ; // "flag" in Japanese
-      
+
     public String get名称() {
         return 名称;
     }

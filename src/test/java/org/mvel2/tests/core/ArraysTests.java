@@ -13,7 +13,10 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.mvel2.MVEL.*;
+import static org.mvel2.MVEL.compileExpression;
+import static org.mvel2.MVEL.compileSetExpression;
+import static org.mvel2.MVEL.executeExpression;
+import static org.mvel2.MVEL.executeSetExpression;
 
 /**
  * @author Mike Brock .
@@ -85,7 +88,7 @@ public class ArraysTests extends AbstractTest {
       assertEquals(0, ((int[]) MVEL.executeExpression(expr))[0]);
       assertEquals(1, ((int[]) MVEL.executeExpression(expr))[1]);
   }
-  
+
   public void testArrayDefinitionWithCoercionShort() {
       Serializable expr = MVEL.compileExpression( "new short[] { 0, 1, 2 }" );
       assertEquals(0, ((short[]) MVEL.executeExpression(expr))[0]);
@@ -235,6 +238,7 @@ public class ArraysTests extends AbstractTest {
     }
   }
 
+	@SuppressWarnings("DoubleBraceInitialization")
   public void testAssignmentOnTwoDimensionalArrayUsingIndexedInput() {
     ParserConfiguration conf = new ParserConfiguration();
     ParserContext pctx = new ParserContext( conf );

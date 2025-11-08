@@ -1,19 +1,22 @@
 package org.mvel2.tests.core;
 
+import org.junit.Test;
+import org.mvel2.MVEL;
+import org.mvel2.ParserContext;
+import org.mvel2.tests.BaseMvelTest;
+
 import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
-import org.mvel2.MVEL;
-import org.mvel2.ParserContext;
-
-import static org.junit.Assert.*;
-import org.mvel2.tests.BaseMvelTest;
-import static org.mvel2.tests.core.StaticMethodImportTests.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
+import static org.mvel2.tests.core.StaticMethodImportTests.CoreMatcher.is;
 import static org.mvel2.tests.core.StaticMethodImportTests.IsEqual.equalTo;
 import static org.mvel2.tests.core.StaticMethodImportTests.IsInstanceOf.instanceOf;
-import static org.mvel2.tests.core.StaticMethodImportTests.CoreMatcher.is;
+import static org.mvel2.tests.core.StaticMethodImportTests.MatcherAssert.assertThat;
 
 /**
  * Classes ripped from hamcrest for purposes for testing
@@ -23,7 +26,7 @@ import static org.mvel2.tests.core.StaticMethodImportTests.CoreMatcher.is;
  */
 public class StaticMethodImportTests extends BaseMvelTest {
 
-    private static final String IMPORTS =
+	private static final String IMPORTS =
             "import_static org.mvel2.tests.core.StaticMethodImportTests$MatcherAssert.assertThat;\n" +
             "import_static org.mvel2.tests.core.StaticMethodImportTests$IsEqual.equalTo;\n" +
             "import_static org.mvel2.tests.core.StaticMethodImportTests$IsInstanceOf.instanceOf;\n" +
@@ -35,62 +38,48 @@ public class StaticMethodImportTests extends BaseMvelTest {
 		testMVEL("assertThat('xxx', 150, is(150));");
 		assertThat(150, is(equalTo(150)));
 		testMVEL("assertThat('xxx', 150, is(equalTo(150)));");
-		
-		try {
-			assertThat(149, is(150));
-			fail( "should have thrown exception" );
-		} catch ( AssertionError e) {
-			
-		}		
+
+		assertThrows(AssertionError.class, ()->assertThat(149, is(150)));
+
 		try {
 			testMVEL("assertThat(149, is(150));");
 			fail( "should have thrown exception" );
 		} catch ( Exception e) {
 			assertEquals(AssertionError.class, e.getCause().getCause().getClass() );
-		}		
-		
-		try {
-			assertThat(149, is(equalTo(150)));
-			fail( "should have thrown exception" );
-		} catch ( AssertionError e) {
-			
-		}		
-		
+		}
+
+		assertThrows(AssertionError.class, ()->assertThat(149, is(equalTo(150))));
+
 		try {
 			testMVEL("assertThat(149, is(equalTo(150)));");
 			fail( "should have thrown exception" );
 		} catch ( Exception e) {
 			assertEquals(AssertionError.class, e.getCause().getCause().getClass() );
-		}			
-		
-		assertThat("yoda", is("yoda"));		
+		}
+
+		assertThat("yoda", is("yoda"));
 		testMVEL("assertThat('yoda', is('yoda'));");
-		
+
 		assertThat("yoda", is(equalTo("yoda")));
 		testMVEL("assertThat('yoda', is(equalTo('yoda')));");
-		
-		try {
-			assertThat("darth", is("yoda"));
-			fail( "should have thrown exception" );
-		} catch ( AssertionError e) {
-			
-		}	
-		
+
+		assertThrows(AssertionError.class, ()->assertThat("darth", is("yoda")));
+
 		try {
 			testMVEL("assertThat('darth', is('yoda'));");
 			fail( "should have thrown exception" );
 		} catch ( Exception e) {
-			assertEquals(AssertionError.class, e.getCause().getCause().getClass() );
-		}			
-		
+			assertSame(AssertionError.class, e.getCause().getCause().getClass());
+		}
+
 		assertThat("yoda", is(instanceOf(String.class)));
 		testMVEL("assertThat('yoda', is(instanceOf(String)));");
-		
+
 		assertThat("yoda", is(String.class));
 		testMVEL("assertThat('yoda', is(String));");
 	}
-	
-	
+
+
 	private void testMVEL(String text) {
         testMVELUntyped(text);
         testMVELTyped(text);
@@ -119,47 +108,48 @@ public class StaticMethodImportTests extends BaseMvelTest {
 
 	public static class MatcherAssert {
 	    public static <T> void assertThat(T actual, Matcher<? super T> matcher) {
-	        if (!matcher.matches(actual)) {	            
+	        if (!matcher.matches(actual)) {
 	            throw new AssertionError();
-	        }	    	
+	        }
 	    }
-	    
+
 	    public static <T> void assertThat(String reason, T actual, Matcher<? super T> matcher) {
-	        if (!matcher.matches(actual)) {	            
+	        if (!matcher.matches(actual)) {
 	            throw new AssertionError(reason);
-	        }	    	
-	    }		
+	        }
+	    }
 	}
-	
+
 	public static class CoreMatcher {
 
 		  public static <T> Matcher<T> is(Matcher<T> matcher) {
-		    return Is.<T>is(matcher);
+		    return Is.is(matcher);
 		  }
 
 
 		  public static <T> Matcher<T> is(T value) {
-		    return Is.<T>is(value);
+		    return Is.is(value);
 		  }
 
 
 		  public static <T> Matcher<T> is(java.lang.Class<T> type) {
-		    return Is.<T>is(type);
+		    return Is.is(type);
 		  }
- 
-	}	
-	
+
+	}
+
 	public static class Is<T> implements Matcher<T> {
 	    private final Matcher<T> matcher;
 
 	    public Is(Matcher<T> matcher) {
 	        this.matcher = matcher;
 	    }
-	    
-	    public boolean matches(Object arg) {
+
+	    @Override
+			public boolean matches(Object arg) {
 	        return matcher.matches(arg);
-	    }	    
-	    
+	    }
+
 	    public static <T> Matcher<T> is(Matcher<T> matcher) {
 	        return new Is<T>(matcher);
 	    }
@@ -172,25 +162,26 @@ public class StaticMethodImportTests extends BaseMvelTest {
 	    public static <T> Matcher<T> is(Class<T> type) {
 	        final Matcher<T> typeMatcher = instanceOf(type);
 	        return is(typeMatcher);
-	    }	    
-	    
+	    }
+
 	}
-    
+
 	public static class IsEqual<T> implements Matcher<T>{
 	    private final Object object;
 
 	    public IsEqual(T equalArg) {
 	        object = equalArg;
 	    }
-	    
-	    public boolean matches(Object arg) {
+
+	    @Override
+			public boolean matches(Object arg) {
 	        return areEqual(arg, object);
-	    }	    
-	    
+	    }
+
 	    public static <T> Matcher<T> equalTo(T operand) {
 	        return new IsEqual<T>(operand);
-	    }		
-	    
+	    }
+
 	    private static boolean areEqual(Object o1, Object o2) {
 	        if (o1 == null) {
 	            return o2 == null;
@@ -219,10 +210,10 @@ public class StaticMethodImportTests extends BaseMvelTest {
 
 	    private static boolean isArray(Object o) {
 	        return o.getClass().isArray();
-	    }	    
+	    }
 	}
-	
-    
+
+
 	public static class IsInstanceOf implements Matcher<Object> {
 	    private final Class<?> expectedClass;
 	    private final Class<?> matchableClass;
@@ -232,42 +223,43 @@ public class StaticMethodImportTests extends BaseMvelTest {
 	        this.expectedClass = expectedClass;
 	        this.matchableClass = matchableClass(expectedClass);
 	    }
-	    
-	    public boolean matches(Object item) {
+
+	    @Override
+			public boolean matches(Object item) {
 	      if (null == item) {
 	        return false;
 	      }
-	      
+
 	      if (!matchableClass.isInstance(item)) {
 	        return false;
 	      }
-	      
+
 	      return true;
-	    }	    
-	    
+	    }
+
 	    private static Class<?> matchableClass(Class<?> expectedClass) {
-	        if (boolean.class.equals(expectedClass)) return Boolean.class; 
-	        if (byte.class.equals(expectedClass)) return Byte.class; 
-	        if (char.class.equals(expectedClass)) return Character.class; 
-	        if (double.class.equals(expectedClass)) return Double.class; 
-	        if (float.class.equals(expectedClass)) return Float.class; 
-	        if (int.class.equals(expectedClass)) return Integer.class; 
-	        if (long.class.equals(expectedClass)) return Long.class; 
-	        if (short.class.equals(expectedClass)) return Short.class; 
+	        if (boolean.class.equals(expectedClass)) return Boolean.class;
+	        if (byte.class.equals(expectedClass)) return Byte.class;
+	        if (char.class.equals(expectedClass)) return Character.class;
+	        if (double.class.equals(expectedClass)) return Double.class;
+	        if (float.class.equals(expectedClass)) return Float.class;
+	        if (int.class.equals(expectedClass)) return Integer.class;
+	        if (long.class.equals(expectedClass)) return Long.class;
+	        if (short.class.equals(expectedClass)) return Short.class;
 	        return expectedClass;
 	      }
 
-	    
+
 	    public static <T> Matcher<T> instanceOf(Class<?> type) {
 	        return (Matcher<T>) new IsInstanceOf(type);
-	    }	
-	    
+	    }
+
 	    public static <T> Matcher<T> any(Class<T> type) {
 	        return (Matcher<T>) new IsInstanceOf(type);
-	    }	    
-	}	
-	
-    public static interface Matcher<T> {
+	    }
+	}
+
+    public interface Matcher<T> {
         boolean matches(Object item);
     }
 }

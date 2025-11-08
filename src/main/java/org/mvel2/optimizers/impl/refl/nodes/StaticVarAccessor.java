@@ -26,16 +26,15 @@ import java.lang.reflect.Field;
 
 public class StaticVarAccessor implements AccessorNode {
   private AccessorNode nextNode;
-  Field field;
+  final Field field;
 
-  public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
+  @Override
+	public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
     try {
-      if (nextNode != null) {
-        return nextNode.getValue(field.get(null), elCtx, vars);
-      }
-      else {
-        return field.get(null);
-      }
+      if (nextNode != null)
+	        return nextNode.getValue(field.get(null), elCtx, vars);
+      else
+  	      return field.get(null);
     }
     catch (Exception e) {
       throw new OptimizationFailure("unable to access static field", e);
@@ -46,34 +45,30 @@ public class StaticVarAccessor implements AccessorNode {
     this.field = field;
   }
 
-  public AccessorNode getNextNode() {
-    return nextNode;
-  }
+  @Override public AccessorNode getNextNode (){ return nextNode; }
 
-  public AccessorNode setNextNode(AccessorNode nextNode) {
+  @Override
+	public AccessorNode setNextNode(AccessorNode nextNode) {
     return this.nextNode = nextNode;
   }
 
-  public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+  @Override
+	public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
     try {
-      if (nextNode == null) {
-        field.set(null, value);
-      }
-      else {
-        return nextNode.setValue(field.get(null), elCtx, variableFactory, value);
-      }
-    }
-    catch (Exception e) {
+      if (nextNode == null)
+        	field.set(null, value);
+      else
+      	  return nextNode.setValue(field.get(null), elCtx, variableFactory, value);
+    } catch (Exception e){
       throw new RuntimeException("error accessing static variable", e);
     }
     return value;
   }
 
-  public Field getField() {
-    return field;
-  }
+  public Field getField (){ return field; }
 
-  public Class getKnownEgressType() {
-    return field.getClass();
+  @Override
+	public Class<?> getKnownEgressType() {
+    return field.getType();
   }
 }

@@ -2,6 +2,7 @@ package org.mvel2.tests.core.res;
 
 import java.util.Collection;
 
+@SuppressWarnings("EqualsHashCode")
 public class Foo {
   private Bar bar = new Bar();
   public String register;
@@ -16,7 +17,7 @@ public class Foo {
   private SampleBean sampleBean = new SampleBean();
   public Bar publicBar = new Bar();
   public static final Bar STATIC_BAR = new Bar();
-  
+
   private char[] charArray;
 
   private char[][] charArrayMulti;
