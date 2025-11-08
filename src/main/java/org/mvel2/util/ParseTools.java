@@ -2141,7 +2141,7 @@ public class ParseTools {
   }
 
   public static boolean isWhitespace (char c) {
-    return Character.isSpaceChar(c) || Character.isWhitespace(c);
+    return c <= ' ' || Character.isSpaceChar(c) || Character.isWhitespace(c);
   }
 
   public static String repeatChar (char c, int times) {
