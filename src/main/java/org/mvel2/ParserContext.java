@@ -722,7 +722,7 @@ public class ParserContext implements Serializable {
     if (isEmpty(variableVisibility))
 	      throw new RuntimeException("getVariableScope: no context");
 
-    return variableVisibility.getLast();
+		return variableVisibility.get(variableVisibility.size() - 1);// getLast
   }
 
   public boolean isVariableVisible(String var) {

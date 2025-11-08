@@ -51,7 +51,7 @@ public class CompileException extends RuntimeException {
     this.cursor = cursor;
 
     if (!errors.isEmpty()){
-      ErrorDetail detail = errors.getFirst();
+      ErrorDetail detail = errors.get(0);// getFirst
       this.cursor = detail.getCursor();
       this.lineNumber = detail.getLineNumber();
       this.column = detail.getColumn();
