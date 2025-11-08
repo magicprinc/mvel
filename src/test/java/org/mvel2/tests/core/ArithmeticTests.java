@@ -1074,7 +1074,8 @@ public class ArithmeticTests extends AbstractTest {
 
 		result = BigDecimal.ZERO.add(java.math.BigDecimal.ONE).add(java.math.BigDecimal.ONE);
 		assertEquals(BigDecimal.valueOf(2), result);
-  }
+		assertEqualsByComparingTo(new BigDecimal(2), result);
+	}
 
 	/// https://github.com/mvel/mvel/issues/249
 	/// The following caused a ClassCastException because the compiler optimized for integers
@@ -1085,7 +1086,7 @@ public class ArithmeticTests extends AbstractTest {
     Map<String, Object> expressionVars = new HashMap<>();
     expressionVars.put("x1", 128.33);
     Object result = MVEL.executeExpression(compileExpression, parserContext, expressionVars);
-    Assert.assertEquals(3919.9, ((Number)result).doubleValue(), 0.01);
+    assertEquals(3919.9, ((Number)result).doubleValue(), 0.01);
   }
 
 	/// https://github.com/mvel/mvel/pull/341
@@ -1134,6 +1135,13 @@ public class ArithmeticTests extends AbstractTest {
 //		assertEquals(Integer.class, result.getClass());
 //		assertEquals(5, result);
 //	}
+
+	public void testIssue321_() {
+		Map<String, Object> vars = new HashMap<>();
+		vars.put("a", BigDecimal.valueOf(19.8));
+		Object result = MVEL.eval("a>=19.8", vars);
+		Assert.assertTrue((boolean) result);
+	}
 
 
 	public void testBasic () {

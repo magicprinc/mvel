@@ -2076,7 +2076,7 @@ public class AbstractParser implements Parser, Serializable {
   protected void setExpression (char[] expression) {
     end = length = (this.expr = expression).length;
     while (start < length && isWhitespace(expr[start])) start++;
-    while (length > start && isWhitespace(this.expr[length - 1])) length--;
+    while (length > 0 && isWhitespace(this.expr[length - 1])) length--;
   }
 
   /**
