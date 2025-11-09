@@ -2,11 +2,11 @@ plugins {
 	id "java-library"
 	id "idea"
 	id "maven-publish"
+	id "application"
   //id 'java-test-fixtures' // produces test fixtures [in src/testFixtures/java] can use main and visible for test
 
-  id "io.freefair.lombok" version "latest.release"
-  id "net.ltgt.errorprone" version "latest.release"
-  id "org.gradlex.reproducible-builds" version "latest.release"
+	alias(libs.plugins.errorprone)
+	alias(libs.plugins.reproducible.builds)
 }
 
 group = "org.mvel"
