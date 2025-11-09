@@ -1,0 +1,126 @@
+plugins {
+	id "java-library"
+	id "idea"
+	id "maven-publish"
+  //id 'java-test-fixtures' // produces test fixtures [in src/testFixtures/java] can use main and visible for test
+
+  id "io.freefair.lombok" version "latest.release"
+  id "net.ltgt.errorprone" version "latest.release"
+  id "org.gradlex.reproducible-builds" version "latest.release"
+}
+
+group = "org.mvel"
+version = "2.6.0"
+
+println "[INFO] ${project.group}:${project.name}:$version  ⇒  ${tasks.jar.archiveFileName.get()} # JVM: ${System.getProperty("java.version")}  Gradle: ${gradle.gradleVersion}"
+
+repositories {
+	mavenLocal() {
+		mavenContent { releasesOnly() }
+	}
+	mavenCentral() {
+		mavenContent { releasesOnly() }
+	}
+	maven {
+		url = "https://repo1.maven.org/maven2/" // https://github.com/nats-io/nats.java#using-gradle
+		mavenContent { releasesOnly() }
+	}
+	maven {
+		url = 'https://jitpack.io'
+		mavenContent { releasesOnly() }
+	}
+}
+
+//groovy compiles .java (if java calls groovy) ⇒ sourceSets.main.java.srcDirs = []; sourceSets.main.groovy.srcDirs += ["src/main/java"]
+
+tasks.withType(JavaCompile).configureEach {
+  options.encoding = 'UTF-8' // = compileJava.options.encoding = "UTF-8"
+  options.compilerArgs.addAll(['-Xlint:all,-serial', '-parameters'])
+  options.release.set(17) // javac --release 7→8..25+
+  options.deprecation = true
+  options.debug = true
+
+  options.errorprone {
+    enabled = true
+    disableWarningsInGeneratedCode = true
+    excludedPaths = ".*/(generated|test).*/.*"
+		disable("UnusedVariable")
+		disable("MissingSummary")
+		disable("StringConcatToTextBlock") // disable("InconsistentCapitalization")
+    errorproneArgs = ["-XepExcludedPaths:.*/test/.*"]
+  }
+}
+
+publishing {// https://docs.gradle.org/current/userguide/publishing_maven.html
+	publications {
+		maven(MavenPublication) {
+			//groupId="com.devinotele" (в gradle.properties); artifactId = auto по имени проекта == folder name
+			from components.java
+		}
+	}
+}
+java {// создать ...-src.jar и ...-javadoc.jar
+	withSourcesJar()
+}
+
+dependencies {
+  errorprone("com.google.errorprone:error_prone_core:latest.release")
+
+	implementation("org.ow2.asm:asm:latest.release")
+	compileOnly("org.jspecify:jspecify:latest.release")
+
+  //***** TEST TEST TEST *****
+  testImplementation libs.bundles.junit
+	testImplementation(libs.bundles.junitRuntime)// IDEA не может так testRuntimeOnly
+}
+configurations.configureEach { // configurations.implementation ?
+	exclude group: "commons-logging", module: "commons-logging"
+	exclude group: 'org.springframework', module: 'spring-jcl'
+	exclude group: "org.apache.logging.log4j", module: "log4j-api"
+	exclude group: "org.apache.logging.log4j", module: "log4j-to-slf4j"
+  exclude group: "org.jboss.slf4j", module:  "slf4j-jboss-logmanager"
+}
+
+
+idea { module { downloadJavadoc = true; downloadSources = true } }
+
+test {
+  useJUnitPlatform()
+  testLogging {
+    events "passed", "skipped", "failed" // PASSED, SKIPPED, FAILED
+    showStandardStreams = true // show standard out & err of the test JVM on the console
+    showExceptions = true
+    exceptionFormat = 'full'
+  }
+  enableAssertions = true
+	maxHeapSize = "16G" // rotor-test requires a lot of RAM
+
+  //systemProperty("slf4j.detectLoggerNameMismatch", "true")
+  systemProperty("file.encoding", "UTF-8")
+  systemProperty("user.language", "en") // ru?
+
+
+  // в multi-project нас чаще запускают в корне, но могут в our subproject dir: где искать конфиги?!
+  workingDir project.projectDir // Set the working directory to the subproject directory e.g. fink-lab/common-utils
+  systemProperty("user.dir", project.projectDir) // контрольный выстрел
+  println "[INFO] ${project.name}.workingDir == $workingDir"
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+  preserveFileTimestamps = false
+  reproducibleFileOrder = true
+}
+
+// Main JAR with OSGi manifest
+jar {
+	archiveBaseName = 'mvel2'
+	manifest {
+		attributes(
+			'Main-Class': 'org.mvel2.sh.Main',
+			'Bundle-SymbolicName': 'org.mvel2',
+			'Bundle-Name': 'mvel2',
+			'Import-Package': 'sun.*;resolution:=optional, *',
+			'Export-Package': 'org.mvel2.*'
+		)
+	}
+}
