@@ -20,11 +20,14 @@ package org.mvel2.compiler;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Map;
-
-import static java.lang.String.valueOf;
-import static org.mvel2.util.ParseTools.isNumeric;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 
 public final class BlankLiteral implements Serializable {
   public static final BlankLiteral INSTANCE = new BlankLiteral();
@@ -33,27 +36,56 @@ public final class BlankLiteral implements Serializable {
 
   @Override
 	public boolean equals (Object obj) {
-		final String s;
-    if (obj == null || (s = valueOf(obj).trim()).length() == 0){
+    if (obj == null)
       return true;
-    }
-    if (isNumeric(obj)) {
-      return "0".equals(s);
-    }
-    if (obj instanceof Collection<?>c){
+
+		else if (obj instanceof Double n)
+			return isZeroSafe(n);
+		else if (obj instanceof Float n)
+			return isZeroSafe(n);
+
+		else if (obj instanceof Boolean b)
+			return !b;
+
+		else if (obj instanceof BigInteger n)
+			return n.signum() == 0;
+		else if (obj instanceof BigDecimal n) // bd.compareTo(BigDecimal.ZERO) == 0
+			return n.signum() == 0;
+
+		else if (obj instanceof Number n)
+			return n.longValue() == 0;
+
+    else if (obj instanceof Collection<?>c)
       return c.isEmpty();
-    }
-    if (obj.getClass().isArray()) {
+    else if (obj.getClass().isArray())
       return Array.getLength(obj) == 0;
-    }
-    if (obj instanceof Boolean b){
-      return !b;
-    }
-    if (obj instanceof Map<?,?> m){
+    else if (obj instanceof Map<?,?> m)
       return m.isEmpty();
-    }
-    return false;
+
+		else if (obj instanceof Optional<?> x)
+			return x.isEmpty();
+		else if (obj instanceof OptionalInt x)
+			return x.isEmpty();
+		else if (obj instanceof OptionalLong x)
+			return x.isEmpty();
+		else if (obj instanceof OptionalDouble x)
+			return x.isEmpty();
+
+		var s = obj.toString().trim();
+		return s.length() == 0;
   }
+
+	static boolean isZeroSafe (double value) {
+		if (Double.isNaN(value)) return false;
+		if (Double.isInfinite(value)) return false;
+		return Math.abs(value) < 1e-10;// EPSILON
+	}
+
+	static boolean isZeroSafe (float value) {
+		if (Double.isNaN(value)) return false;
+		if (Double.isInfinite(value)) return false;
+		return Math.abs(value) < 1e-5f;// EPSILON
+	}
 
 	@Override public int hashCode (){ return 0; }
 
