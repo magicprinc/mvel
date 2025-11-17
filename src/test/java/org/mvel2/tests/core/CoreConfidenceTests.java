@@ -4096,6 +4096,7 @@ public class CoreConfidenceTests extends AbstractTest {
     Serializable compiled = MVEL.compileExpression(expression, context);
     Object result = MVEL.executeExpression(compiled, new HashMap());
     assertEquals(1L << 62L, result);
+    assertEquals(1L << 62L, MVEL.eval(expression));
 
     expression = "one << shift";
     Map map = new HashMap() {{
@@ -4105,8 +4106,27 @@ public class CoreConfidenceTests extends AbstractTest {
     compiled = MVEL.compileExpression(expression, context);
     result = MVEL.executeExpression(compiled, map);
     assertEquals(1L << 62L, result);
+    assertEquals(1L << 62L, MVEL.eval(expression, map));
     System.out.println(result);
   }
+
+	public void testShiftOperatorLarge() {
+		String expression = "1 << 65536L";
+		Serializable compiled = MVEL.compileExpression(expression, context);
+		Object result = MVEL.executeExpression(compiled, new HashMap());
+		assertEquals(1 << 65536L, result);
+
+		expression = "one << shift";
+		Map map = new HashMap() {{
+			put("one", 1);
+			put("shift", 65536L);
+		}};
+		compiled = MVEL.compileExpression(expression, context);
+		result = MVEL.executeExpression(compiled, map);
+		assertEquals(1 << 65536L, result);
+		System.out.println(result);
+	}
+
 
   public void testSystemOutOnPrivateClass() {
     PrintStream originalSystemOut = System.out;
