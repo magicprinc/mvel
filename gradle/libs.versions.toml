@@ -22,8 +22,8 @@ eclipseCollections = "13.+"
 ebeanVersion = "17.+!!"
 slf4jVersion = "2.0.+!!"
 micrometerVersion = "1.15.+!!" # делают RC и иногда ломают: требует контроля человеком
-vaadinHillaVersion = "24.9.2"
-finkSmsRouter = "2.21.2"
+vaadinHillaVersion = "24.9.4"
+finkSmsRouter = "2.21.4"
 
 ########################################################################################################################
 # implementation libs.groovy.json
@@ -101,7 +101,7 @@ sslcontextKickstartNetty = { module = "io.github.hakky54:ayza-for-netty", versio
 roaringBitmap = { module = "com.github.RoaringBitmap:RoaringBitmap", version="latest.release" }
 commonsLang3 = { module = "org.apache.commons:commons-lang3", version="latest.release" }
 commonsCollections4 = { module = "org.apache.commons:commons-collections4", version="latest.release" } # prefer Guava, Spring, JCTools, FastUtil, eclipse-collections
-apacheCommonsIo = { module = "commons-io:commons-io", version="latest.release" }
+apacheCommonsIo = { module = "commons-io:commons-io", version="2.+" }
 apacheCommonsCodec = { module = "commons-codec:commons-codec", version="latest.release" }
 apacheCommonsFileUpload = { module = "commons-fileupload:commons-fileupload", version="latest.release" }
 apacheCommonsText = { module = "org.apache.commons:commons-text", version="latest.release" }
@@ -156,7 +156,7 @@ jacksonDataformatMsgPack = { module = "org.msgpack:jackson-dataformat-msgpack", 
 # jacksonDataformatIon = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-ion", version.ref="jackson" }
 # amazonIonJava = { module = "com.amazon.ion:ion-java", version="latest.release" }<^ - NICE, but slow and not widely spread
 # jacksonDataformatToml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-toml", version.ref="jackson" } - nice, but text for humans: see yaml and hocon
-jacksonDataformatSmile = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-smile", version.ref="jackson" } #× fast, but ONLY JAVA 😭
+# jacksonDataformatSmile = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-smile", version.ref="jackson" } #× fast, but ONLY JAVA 😭
 # https://github.com/michel-kraemer/bson4jackson → new ObjectMapper(new BsonFactory())  MongoDB https://en.wikipedia.org/wiki/BSON
 # jacksonDataformatBSON = { module = "de.undercouch:bson4jackson", version.ref="jackson" } × nice, but mostly for mongodb
 
@@ -193,6 +193,10 @@ eclipseCollectionsTest = { module = "org.eclipse.collections:eclipse-collections
 jctools = { module = "org.jctools:jctools-core", version="4.+" }
 # https://tech.trivago.com/post/2022-03-09-why-and-how-we-use-primitive-maps ➕ https://github.com/magicprinc/fastutil-concurrent-wrapper
 fastutilConcurrentWrapper = { module = "com.github.magicprinc:fastutil-concurrent-wrapper", version="0.5.3" }
+
+# https://github.com/softwaremill/jox + https://jox.softwaremill.com/
+softwaremill-jox-channels = { module = "com.softwaremill.jox:channels", version="latest.release" }
+softwaremill-jox-structured = { module = "com.softwaremill.jox:structured", version="latest.release" }
 
 okHttpClient = { module = "com.squareup.okhttp3:okhttp", version="4.+" }
 okhttpLoggingInterceptor = { module = "com.squareup.okhttp3:logging-interceptor", version="4.+" }
@@ -284,6 +288,7 @@ swaggerAnnotations = { module = "io.swagger.core.v3:swagger-annotations-jakarta"
 # https://smallrye.io/smallrye-config/Main/config/getting-started/
 smallryeConfig = { module = "io.smallrye.config:smallrye-config-core", version="latest.release" }
 smallryeConfigSourceYaml = { module = "io.smallrye.config:smallrye-config-source-yaml", version="latest.release" }
+smallryeCommonClassloader = { module = "io.smallrye.common:smallrye-common-classloader", version="2.14.+!!" }
 #smallryeConfigSourceHocon = { module = "io.smallrye.config:smallrye-config-source-hocon", version="latest.release" }
 typesafeConfigHocon = { module = "com.typesafe:config", version="latest.release" }
 # https://smallrye.io/smallrye-config/Main/config/secret-keys/
@@ -291,11 +296,11 @@ smallryeConfigCrypto = { module = "io.smallrye.config:smallrye-config-crypto", v
 smallryeConfigValidator = { module = "io.smallrye.config:smallrye-config-validator", version="latest.release" }
 jbossLogging = { module = "org.jboss.logging:jboss-logging", version="latest.release!!" }
 
-#todo SmallRye Fault Tolerance + Mutiny ? Vert.x CircuitBreaker ? Guava RateLimiter/commons-lang CircuitBreaker ? bucket4j
+#todo SmallRye Fault Tolerance + ×Mutiny→JOX flow ? Vert.x CircuitBreaker ? ×Guava RateLimiter ? todo https://resilience4j.readme.io/ + https://github.com/bucket4j/bucket4j
 
 # https://jira.platform-s.com/browse/PLAT-1618 → https://smallrye.io/docs/smallrye-fault-tolerance/6.2.6/ ➕ https://github.com/smallrye/smallrye-fault-tolerance
 faultTolerance = { module = "io.smallrye:smallrye-fault-tolerance-standalone", version="latest.release" }
-faultToleranceVertx = { module = "io.smallrye:smallrye-fault-tolerance-vertx", version="latest.release" }
+# faultToleranceVertx = { module = "io.smallrye:smallrye-fault-tolerance-vertx", version="latest.release" }
 # io.smallrye:smallrye-fault-tolerance-mutiny + org.reactivestreams:reactive-streams:1.+
 # https://smallrye.io/smallrye-mutiny ➕ https://smallrye.io/smallrye-mutiny-vertx-bindings/ ➕ https://github.com/smallrye/smallrye-mutiny-vertx-bindings/tree/main/vertx-mutiny-clients ➕ io.smallrye.reactive:smallrye-mutiny-vertx-runtime:latest.release
 
@@ -327,13 +332,12 @@ mockitoJunitJupiter = { module = "org.mockito:mockito-junit-jupiter", version="l
 junitPioneer = { module = "org.junit-pioneer:junit-pioneer", version="latest.release" }
 googleTruth = { module = "com.google.truth:truth", version="latest.release" }
 # https://github.com/approvals/ApprovalTests.Java ➕ https://approvaltests.com/ ➕ https://github.com/junit-team/junit5/discussions/2697
-approvalTests = { module = "com.approvaltests:approvaltests", version="24.+" } #todo watch approvaltests
+approvalTests = { module = "com.approvaltests:approvaltests", version="25.+" }
 springTest = { module = "org.springframework:spring-test", version.ref="spring" }
 springBootStarterTest = { module = "org.springframework.boot:spring-boot-starter-test", version.ref="springBoot" }
 
 # Awaitility → Waiter + https://vmlens.com/  [i] JUnit5, Vert.x, Ignite, Mutiny, JDK21 VirtualThreads, vert.x-junit5
 # v→ ? https://github.com/lukas-krecan/JsonUnit
-# todo https://github.com/cescoffier/loom-unit
 jsonAssert = { module = "org.skyscreamer:jsonassert", version="latest.release" } # org.skyscreamer.jsonassert.JSONAssert.assertEquals
 
 # https://github.com/lukas-krecan/JsonUnit ➕ https://mvnrepository.com/artifact/net.javacrumbs.json-unit/json-unit
@@ -376,7 +380,7 @@ junit = [ # "hikariCP" boot обнаруживает его и требует jd
 	"junitJupiter","mockitoCore","mockitoJunitJupiter", "googleTruth", "approvalTests", "junitPioneer",
   "springTest","springBootStarterTest",
 	"eclipseCollectionsTest","jsonAssert",
-	"okHttp-mockWebServer","okio","okHttpClient",
+	"okHttp-mockWebServer","okHttpClient",
 	"testEasyRandom", "testEasyRandomValidation", "testInstancio", # "testInstancioQuickCheck"
 	"slf4jApi", "slf4jJCL", "slf4jJUL", "slf4jLog4j",
 	"testcontainers-junit"
@@ -399,7 +403,7 @@ springSecurity = ["springSecurityCore","springSecurityWeb","springSecurityConfig
 groovy = ["groovyCore", "groovyJson", "groovyXml"] # "groovyServlet" → javax; groovyTemplates → qute
 
 smallryeConfig = ["smallryeConfig","smallryeConfigSourceYaml","snakeYaml","smallryeConfigValidator","jakarta-validationApi","jakarta-annotationApi","jbossLogging",
-		"smallryeConfigCrypto", "typesafeConfigHocon"]
+		"smallryeConfigCrypto", "typesafeConfigHocon", "smallryeCommonClassloader"]
 
 okHttp = ["okHttpClient","okhttpLoggingInterceptor","okio","okhttpInterceptorBrotli"]
 
@@ -419,7 +423,7 @@ upgradeBootApp = [ # "hikariCP" boot обнаруживает его и треб
 coreUtilExt = [
 	"icu4j", "fastutil", "hash4j", "fastutilConcurrentWrapper",
 	"apacheCommonsIo", "apacheCommonsCodec",
-	"faultTolerance","faultToleranceVertx"
+	"faultTolerance"
 ]
 
 ########################################################################################################################
